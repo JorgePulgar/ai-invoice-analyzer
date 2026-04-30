@@ -1,0 +1,243 @@
+{
+  "auth": {
+    "token": "mock-jwt-token-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+    "user": {
+      "id": 1,
+      "email": "demo@invoiceinsights.es",
+      "created_at": "2026-01-10T09:30:00.000Z"
+    }
+  },
+  "facturas": [
+    {
+      "id": 1,
+      "numero": "F-2026-014",
+      "fecha": "2026-04-22",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Telefónica Movistar SA",
+      "concepto": "Consultoría abril 2026",
+      "base_imponible": 2400.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 504.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 360.00,
+      "total": 2544.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-04-22T11:14:02.000Z"
+    },
+    {
+      "id": 2,
+      "numero": "F-2026-013",
+      "fecha": "2026-04-15",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Banco Santander SA",
+      "concepto": "Desarrollo web abril",
+      "base_imponible": 1800.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 378.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 270.00,
+      "total": 1908.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-04-15T10:02:00.000Z"
+    },
+    {
+      "id": 3,
+      "numero": "FAC-2026-0098",
+      "fecha": "2026-04-10",
+      "emisor": "Microsoft Ireland Operations Ltd",
+      "receptor": "Tu Empresa SL",
+      "concepto": "Microsoft 365 Business — abril",
+      "base_imponible": 22.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 4.62,
+      "irpf_porcentaje": 0,
+      "irpf_cantidad": 0,
+      "total": 26.62,
+      "moneda": "EUR",
+      "tipo": "gasto",
+      "created_at": "2026-04-10T08:00:00.000Z"
+    },
+    {
+      "id": 4,
+      "numero": "F-2026-012",
+      "fecha": "2026-03-30",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Inditex SA",
+      "concepto": "Auditoría sistemas Q1",
+      "base_imponible": 4500.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 945.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 675.00,
+      "total": 4770.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-03-30T17:42:00.000Z"
+    },
+    {
+      "id": 5,
+      "numero": "AWS-INV-2026-03",
+      "fecha": "2026-03-31",
+      "emisor": "Amazon Web Services EMEA SARL",
+      "receptor": "Tu Empresa SL",
+      "concepto": "AWS — uso marzo 2026",
+      "base_imponible": 187.50,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 39.38,
+      "irpf_porcentaje": 0,
+      "irpf_cantidad": 0,
+      "total": 226.88,
+      "moneda": "EUR",
+      "tipo": "gasto",
+      "created_at": "2026-03-31T23:59:00.000Z"
+    },
+    {
+      "id": 6,
+      "numero": "F-2026-011",
+      "fecha": "2026-03-12",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Telefónica Movistar SA",
+      "concepto": "Consultoría marzo 2026",
+      "base_imponible": 2400.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 504.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 360.00,
+      "total": 2544.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-03-12T09:30:00.000Z"
+    },
+    {
+      "id": 7,
+      "numero": "F-2026-008",
+      "fecha": "2026-02-20",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Banco Santander SA",
+      "concepto": "Desarrollo web febrero",
+      "base_imponible": 1800.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 378.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 270.00,
+      "total": 1908.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-02-20T11:00:00.000Z"
+    },
+    {
+      "id": 8,
+      "numero": "F-2026-005",
+      "fecha": "2026-02-05",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Mapfre SA",
+      "concepto": "Migración cloud",
+      "base_imponible": 3200.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 672.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 480.00,
+      "total": 3392.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-02-05T16:20:00.000Z"
+    },
+    {
+      "id": 9,
+      "numero": "F-2026-002",
+      "fecha": "2026-01-15",
+      "emisor": "Tu Empresa SL",
+      "receptor": "Telefónica Movistar SA",
+      "concepto": "Consultoría enero 2026",
+      "base_imponible": 2400.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 504.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 360.00,
+      "total": 2544.00,
+      "moneda": "EUR",
+      "tipo": "ingreso",
+      "created_at": "2026-01-15T10:00:00.000Z"
+    },
+    {
+      "id": 10,
+      "numero": "GES-2026-001",
+      "fecha": "2026-01-08",
+      "emisor": "Gestoría Pérez & Asociados",
+      "receptor": "Tu Empresa SL",
+      "concepto": "Cuotas anuales gestoría",
+      "base_imponible": 600.00,
+      "iva_porcentaje": 21,
+      "iva_cantidad": 126.00,
+      "irpf_porcentaje": 15,
+      "irpf_cantidad": 90.00,
+      "total": 636.00,
+      "moneda": "EUR",
+      "tipo": "gasto",
+      "created_at": "2026-01-08T09:00:00.000Z"
+    }
+  ],
+  "summary": {
+    "ingresos_totales": 19608.00,
+    "gastos_totales": 889.50,
+    "beneficio_neto": 18718.50,
+    "iva_repercutido": 4117.68,
+    "iva_soportado": 169.99,
+    "iva_a_pagar": 3947.69,
+    "irpf_retenido": 2865.00,
+    "num_facturas": 10,
+    "num_clientes": 4,
+    "ticket_medio": 1960.80,
+    "moneda": "EUR",
+    "periodo": {
+      "desde": "2026-01-01",
+      "hasta": "2026-04-30"
+    }
+  },
+  "monthly": [
+    { "mes": "2025-11", "ingresos": 4200.00, "gastos": 215.00 },
+    { "mes": "2025-12", "ingresos": 5100.00, "gastos": 198.00 },
+    { "mes": "2026-01", "ingresos": 2400.00, "gastos": 600.00 },
+    { "mes": "2026-02", "ingresos": 5000.00, "gastos": 0.00 },
+    { "mes": "2026-03", "ingresos": 6900.00, "gastos": 187.50 },
+    { "mes": "2026-04", "ingresos": 4200.00, "gastos": 22.00 }
+  ],
+  "clients": [
+    { "cliente": "Telefónica Movistar SA", "facturado": 7200.00, "num_facturas": 3 },
+    { "cliente": "Inditex SA", "facturado": 4500.00, "num_facturas": 1 },
+    { "cliente": "Banco Santander SA", "facturado": 3600.00, "num_facturas": 2 },
+    { "cliente": "Mapfre SA", "facturado": 3200.00, "num_facturas": 1 }
+  ],
+  "vat": [
+    {
+      "trimestre": "T1",
+      "anio": 2026,
+      "iva_repercutido": 2058.00,
+      "iva_soportado": 169.99,
+      "iva_a_pagar": 1888.01
+    },
+    {
+      "trimestre": "T2",
+      "anio": 2026,
+      "iva_repercutido": 882.00,
+      "iva_soportado": 4.62,
+      "iva_a_pagar": 877.38
+    },
+    {
+      "trimestre": "T3",
+      "anio": 2026,
+      "iva_repercutido": 0,
+      "iva_soportado": 0,
+      "iva_a_pagar": 0
+    },
+    {
+      "trimestre": "T4",
+      "anio": 2026,
+      "iva_repercutido": 0,
+      "iva_soportado": 0,
+      "iva_a_pagar": 0
+    }
+  ]
+}
