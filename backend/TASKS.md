@@ -85,21 +85,21 @@ Pre-requisite: Block 1.2 complete.
 
 Pre-requisite: Block 1.3 complete.
 
-- [ ] Implement `getSummary` in `services/metrics.js`
+- [x] Implement `getSummary` in `services/metrics.js`
   - File: `src/services/metrics.js`
   - Compute every field listed in the contract's summary section.
   - Single SQL query when feasible (use `SUM(CASE WHEN tipo = 'ingreso' THEN ... END)` patterns).
-- [ ] Implement `getMonthly`
+- [x] Implement `getMonthly`
   - Last 12 months including the current one. Months with no data appear with `0.00` (do not skip). Format `YYYY-MM`.
   - Strategy: generate the 12-month range in JS, left-join against a SQL grouping by `strftime('%Y-%m', fecha)`.
-- [ ] Implement `getTopClients`
+- [x] Implement `getTopClients`
   - Income only (`tipo = 'ingreso'`). Group by `receptor`. Order by `SUM(total) DESC`. Default limit 10.
-- [ ] Implement `getVatBreakdown`
+- [x] Implement `getVatBreakdown`
   - Current calendar year, 4 quarters. Empty quarters with zeros.
   - `iva_a_pagar = iva_repercutido - iva_soportado`.
-- [ ] Wire up routes
+- [x] Wire up routes
   - File: `src/routes/analytics.js`. Each route calls the corresponding metrics function and wraps the result in `ok(res, ...)`.
-- [ ] Smoke test for analytics
+- [x] Smoke test for analytics
   - File: `scripts/smoke/analytics.js`.
   - Seed 5–10 facturas spanning multiple months and quarters (income + expense). Hit each of the 4 endpoints. Compare key totals against expected values computed in the script.
 
