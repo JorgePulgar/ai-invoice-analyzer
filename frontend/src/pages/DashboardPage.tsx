@@ -1,20 +1,35 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { MonthlyChart } from '../components/MonthlyChart';
 import { TopClientsList } from '../components/TopClientsList';
 import { VatTable } from '../components/VatTable';
 import { FacturasTable } from '../components/FacturasTable';
+import { DashboardFilters } from '../components/DashboardFilters';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/format';
+import {
+  parseFilters,
+  isDefaultFilters,
+  applyFilters,
+  deriveSummary,
+  deriveMonthly,
+  deriveClients,
+  deriveVat,
+} from '../utils/filters';
 import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura } from '../types';
 
 export function DashboardPage() {
-  const [summary, setSummary] = useState<Summary | null>(null);
-  const [monthly, setMonthly] = useState<MonthlyEntry[]>([]);
-  const [clients, setClients] = useState<ClientEntry[]>([]);
-  const [vat, setVat] = useState<VatEntry[]>([]);
-  const [facturas, setFacturas] = useState<Factura[]>([]);
+  const [searchParams] = useSearchParams();
+
+  // Server-provided data (unfiltered)
+  const [serverSummary, setServerSummary] = useState<Summary | null>(null);
+  const [serverMonthly, setServerMonthly] = useState<MonthlyEntry[]>([]);
+  const [serverClients, setServerClients] = useState<ClientEntry[]>([]);
+  const [serverVat, setServerVat] = useState<VatEntry[]>([]);
+  const [facturasOriginal, setFacturasOriginal] = useState<Factura[]>([]);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -27,11 +42,11 @@ export function DashboardPage() {
       api.listFacturas(),
     ])
       .then(([s, m, c, v, f]) => {
-        setSummary(s);
-        setMonthly(m);
-        setClients(c);
-        setVat(v);
-        setFacturas(f.facturas);
+        setServerSummary(s);
+        setServerMonthly(m);
+        setServerClients(c);
+        setServerVat(v);
+        setFacturasOriginal(f.facturas);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Error al cargar datos');
@@ -43,7 +58,7 @@ export function DashboardPage() {
     try {
       await api.deleteFactura(id);
       const result = await api.listFacturas();
-      setFacturas(result.facturas);
+      setFacturasOriginal(result.facturas);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error al eliminar factura');
     }
@@ -67,6 +82,19 @@ export function DashboardPage() {
     );
   }
 
+  // Apply filters
+  const filterState = parseFilters(searchParams);
+  const filtersActive = !isDefaultFilters(filterState);
+
+  const filteredFacturas = filtersActive
+    ? applyFilters(facturasOriginal, filterState)
+    : facturasOriginal;
+
+  const summary = filtersActive ? deriveSummary(filteredFacturas) : serverSummary;
+  const monthly = filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly;
+  const clients = filtersActive ? deriveClients(filteredFacturas) : serverClients;
+  const vat = filtersActive ? deriveVat(filteredFacturas) : serverVat;
+
   const kpis = summary
     ? [
         { label: 'Ingresos totales', value: formatCurrency(summary.ingresos_totales), tone: 'up' as const },
@@ -82,22 +110,32 @@ export function DashboardPage() {
 
   return (
     <Layout>
+      <DashboardFilters facturas={facturasOriginal} />
+
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} />
         ))}
       </div>
 
-      <div className="mb-6">
-        <MonthlyChart data={monthly} />
-      </div>
+      {filteredFacturas.length === 0 && filtersActive ? (
+        <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
+          <p className="text-bn-muted">Sin facturas para los filtros seleccionados.</p>
+        </div>
+      ) : (
+        <>
+          <div className="mb-6">
+            <MonthlyChart data={monthly} />
+          </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
-        <TopClientsList clients={clients} />
-        <VatTable vat={vat} />
-      </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <TopClientsList clients={clients} />
+            <VatTable vat={vat} />
+          </div>
+        </>
+      )}
 
-      <FacturasTable facturas={facturas} onDelete={handleDelete} />
+      <FacturasTable facturas={filteredFacturas} onDelete={handleDelete} />
     </Layout>
   );
 }
