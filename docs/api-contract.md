@@ -99,30 +99,34 @@ Limits:
 - `Content-Type: application/pdf` only.
 - 10 MB max.
 
-Response 201 — `data` is the inserted factura:
+**Phase 2 behaviour:** extraction always writes to `facturas_draft` (pending review). The final `facturas` row is created only after the user confirms via `POST /api/facturas/drafts/:id/confirm`.
+
+Response 201 — `data.draft` is the created draft (same shape as a factura plus `status`):
 ```json
 {
-  "id": 42,
-  "numero": "F-2026-001",
-  "fecha": "2026-01-15",
-  "emisor": "Empresa Emisora SL",
-  "receptor": "Empresa Receptora SL",
-  "concepto": "Consultoría enero 2026",
-  "base_imponible": 1500.00,
-  "iva_porcentaje": 21,
-  "iva_cantidad": 315.00,
-  "irpf_porcentaje": 15,
-  "irpf_cantidad": 225.00,
-  "total": 1590.00,
-  "moneda": "EUR",
-  "tipo": "ingreso",
-  "created_at": "2026-04-30T10:00:00.000Z"
+  "draft": {
+    "id": 7,
+    "numero": "F-2026-001",
+    "fecha": "2026-01-15",
+    "emisor": "Empresa Emisora SL",
+    "receptor": "Empresa Receptora SL",
+    "concepto": "Consultoría enero 2026",
+    "base_imponible": 1500.00,
+    "iva_porcentaje": 21,
+    "iva_cantidad": 315.00,
+    "irpf_porcentaje": 15,
+    "irpf_cantidad": 225.00,
+    "total": 1590.00,
+    "moneda": "EUR",
+    "tipo": "ingreso",
+    "status": "pending",
+    "created_at": "2026-04-30T10:00:00.000Z"
+  }
 }
 ```
 
 Errors:
 - 400 — extraction or validation failed.
-- 409 — duplicate `numero` for this user (UNIQUE constraint).
 - 413 — file too large.
 - 415 — not a PDF.
 - 502 — Azure AI Foundry error.
@@ -168,6 +172,64 @@ Response 200:
 
 Errors:
 - 404 — factura does not exist or belongs to another user (same message — no enumeration).
+
+#### `GET /api/facturas/drafts`
+
+Auth required. Returns all `pending` drafts for the authenticated user.
+
+Response 200:
+```json
+{ "success": true, "data": { "drafts": [ { "id": 7, "numero": "...", "status": "pending", ... } ] } }
+```
+
+Order: `id DESC`.
+
+#### `POST /api/facturas/drafts/:id/confirm`
+
+Auth required. Promotes a draft to a final factura. The request body may contain edited values for any field — these are what get saved, not the original extracted values.
+
+Request body (all fields required):
+```json
+{
+  "numero": "F-2026-001",
+  "fecha": "2026-01-15",
+  "emisor": "Empresa Emisora SL",
+  "receptor": "Empresa Receptora SL",
+  "concepto": "Consultoría enero 2026",
+  "base_imponible": 1500.00,
+  "iva_porcentaje": 21,
+  "iva_cantidad": 315.00,
+  "irpf_porcentaje": 15,
+  "irpf_cantidad": 225.00,
+  "total": 1590.00,
+  "moneda": "EUR",
+  "tipo": "ingreso"
+}
+```
+
+Response 201 — `data` is the promoted factura row (same shape as `GET /api/facturas` items):
+```json
+{ "id": 42, "numero": "F-2026-001", ..., "created_at": "2026-04-30T10:00:00.000Z" }
+```
+
+Errors:
+- 400 — submitted values fail validation (missing field, bad date, total mismatch, etc.).
+- 404 — draft does not exist or belongs to another user (same message — no enumeration).
+- 409 — `numero` already exists in `facturas` for this user (UNIQUE constraint).
+
+On success the draft row is deleted from `facturas_draft`.
+
+#### `DELETE /api/facturas/drafts/:id`
+
+Auth required. Rejects (deletes) a draft. Scoped to the authenticated user.
+
+Response 200:
+```json
+{ "success": true, "data": { "id": 7 } }
+```
+
+Errors:
+- 404 — draft does not exist or belongs to another user (same message — no enumeration).
 
 ---
 
