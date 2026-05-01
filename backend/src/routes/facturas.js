@@ -77,7 +77,23 @@ router.post('/upload', multerUpload, async (req, res, next) => {
 // 200 → { success: true, data: { facturas: [...] } }
 router.get('/', async (req, res, next) => {
   try {
-    return fail(res, 'Not implemented', 501);
+    const db = getDb();
+    const rows = db
+      .prepare(
+        `SELECT id, numero, fecha, emisor, receptor, concepto,
+                base_imponible, iva_porcentaje, iva_cantidad,
+                irpf_porcentaje, irpf_cantidad, total, moneda, tipo, created_at
+         FROM facturas
+         WHERE user_id = ?
+         ORDER BY fecha DESC, id DESC`
+      )
+      .all(req.user.id);
+
+    const facturas = rows.map((r) => ({
+      ...r,
+      created_at: r.created_at.replace(' ', 'T') + '.000Z',
+    }));
+    return ok(res, { facturas });
   } catch (err) {
     next(err);
   }
@@ -87,7 +103,19 @@ router.get('/', async (req, res, next) => {
 // 200 → { success: true, data: { id } }
 router.delete('/:id', async (req, res, next) => {
   try {
-    return fail(res, 'Not implemented', 501);
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return fail(res, 'Not found', 404);
+    }
+    const db = getDb();
+    const result = db
+      .prepare('DELETE FROM facturas WHERE id = ? AND user_id = ?')
+      .run(id, req.user.id);
+
+    if (result.changes === 0) {
+      return fail(res, 'Not found', 404);
+    }
+    return ok(res, { id });
   } catch (err) {
     next(err);
   }

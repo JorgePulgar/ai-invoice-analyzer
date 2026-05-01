@@ -65,15 +65,15 @@ Pre-requisite: Block 1.1 complete and merged into `dev-backend`.
 
 Pre-requisite: Block 1.2 complete.
 
-- [ ] Implement `GET /api/facturas`
+- [x] Implement `GET /api/facturas`
   - File: `src/routes/facturas.js`
   - Return all facturas for `req.user.id`, ordered by `fecha DESC, id DESC`.
   - Response payload: `{ facturas: [...] }`.
-- [ ] Implement `DELETE /api/facturas/:id`
+- [x] Implement `DELETE /api/facturas/:id`
   - File: `src/routes/facturas.js`
   - Run `DELETE FROM facturas WHERE id = ? AND user_id = ?`. If `result.changes === 0`, return 404 "Not found".
   - On success, return 200 with `{ id }`.
-- [ ] Smoke test for listing & deletion
+- [x] Smoke test for listing & deletion
   - File: `scripts/smoke/facturas.js`.
   - Insert two facturas via the DB (or via upload if extractor is wired), list (assert 2), delete one (assert 200), list again (assert 1), attempt to delete a non-owned factura (assert 404).
 
