@@ -3,6 +3,7 @@ const fs = require('fs');
 const { authenticate } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 const { extractFromPdf } = require('../services/extractor');
+const { generateSummary } = require('../services/summarizer');
 const { getDb } = require('../db/database');
 const { ok, fail } = require('../utils/response');
 
@@ -136,6 +137,39 @@ router.delete('/:id', async (req, res, next) => {
       return fail(res, 'Not found', 404);
     }
     return ok(res, { id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/facturas/:id/summary
+// Returns a cached or freshly generated AI fiscal narrative.
+// 200 → { success: true, data: { summary: "..." } }
+router.post('/:id/summary', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const factura = db
+      .prepare('SELECT * FROM facturas WHERE id = ? AND user_id = ?')
+      .get(id, req.user.id);
+
+    if (!factura) return fail(res, 'Not found', 404);
+
+    if (factura.summary) return ok(res, { summary: factura.summary });
+
+    let summary;
+    try {
+      summary = await generateSummary(factura);
+    } catch (err) {
+      if (err.isAzureError) return fail(res, err.message, 502);
+      return fail(res, err.message, 500);
+    }
+
+    db.prepare('UPDATE facturas SET summary = ? WHERE id = ?').run(summary, id);
+
+    return ok(res, { summary });
   } catch (err) {
     next(err);
   }
