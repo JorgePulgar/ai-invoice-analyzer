@@ -5,7 +5,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { FormData, Blob } = require('node:buffer') || {};
+// FormData and Blob are globals in Node 18+
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const FIXTURE = path.join(__dirname, 'fixtures', 'sample.pdf');

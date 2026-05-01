@@ -51,7 +51,7 @@ Pre-requisite: Block 1.1 complete and merged into `dev-backend`.
 - [x] Verify PDF deletion under all error paths
   - Manually trigger each error path (invalid file, oversized file, duplicate numero, simulated Azure 500). After each, confirm `uploads/` is empty.
   - Capture the verification commands and outputs in the commit body.
-- [ ] Smoke test for upload flow
+- [x] Smoke test for upload flow
   - File: `scripts/smoke/upload.js`, fixture under `scripts/smoke/fixtures/sample.pdf` (synthetic, single-page).
   - Login, upload, assert response shape matches contract, assert DB row exists, assert `uploads/` directory is empty.
 

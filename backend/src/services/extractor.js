@@ -1,11 +1,36 @@
-// Invoice data extraction from PDF using Azure AI Foundry (GPT-4o vision).
+// Invoice data extraction from PDF using Azure AI Foundry (GPT-4o).
 // The caller is responsible for deleting the PDF after this function returns
 // (success or error). This function never deletes the file.
+//
+// Implementation note: Azure AI Foundry rejects data:application/pdf image URLs
+// (only image/* MIME types accepted). We therefore extract the text layer from
+// the PDF with pdfjs-dist (dynamic import, ESM) and send it as a plain text
+// user message. See docs/LESSONS.md for the full incident record.
 
 const fs = require('fs');
+const path = require('path');
 const https = require('https');
 const http = require('http');
 const { URL } = require('url');
+
+async function extractPdfText(buffer) {
+  const pdfjsLib = await import('pdfjs-dist/legacy/build/pdf.mjs');
+  const workerPath = path.resolve(__dirname, '../../node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'file:///' + workerPath.split('\\').join('/');
+
+  const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(buffer) });
+  const doc = await loadingTask.promise;
+  const numPages = doc.numPages;
+
+  const pageTexts = [];
+  for (let i = 1; i <= numPages; i++) {
+    const page = await doc.getPage(i);
+    const content = await page.getTextContent();
+    pageTexts.push(content.items.map(item => item.str).join(' '));
+  }
+
+  return { numPages, text: pageTexts.join('\n') };
+}
 
 const REQUIRED_FIELDS = [
   'numero', 'fecha', 'emisor', 'receptor', 'concepto',
@@ -15,14 +40,6 @@ const REQUIRED_FIELDS = [
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONEDA_RE = /^[A-Z]{3}$/;
-
-// Counts /Type /Page entries in the raw PDF bytes.
-// This is a best-effort heuristic sufficient for Phase 1 single-page enforcement.
-function countPdfPages(buf) {
-  const text = buf.toString('latin1');
-  const matches = text.match(/\/Type\s*\/Page(?!s)/g);
-  return matches ? matches.length : 1;
-}
 
 function validate(data) {
   for (const field of REQUIRED_FIELDS) {
@@ -51,7 +68,7 @@ function validate(data) {
   }
 }
 
-const SYSTEM_PROMPT = `You are a Spanish invoice data extractor. Extract data from the invoice PDF and return ONLY a JSON object with these exact fields:
+const SYSTEM_PROMPT = `You are a Spanish invoice data extractor. Extract data from the invoice text and return ONLY a JSON object with these exact fields:
 {
   "numero": "<invoice number string>",
   "fecha": "<date in YYYY-MM-DD format>",
@@ -59,17 +76,17 @@ const SYSTEM_PROMPT = `You are a Spanish invoice data extractor. Extract data fr
   "receptor": "<recipient full name>",
   "concepto": "<description of goods or services>",
   "base_imponible": <taxable base amount, number>,
-  "iva_porcentaje": <VAT rate, e.g. 21, number>,
+  "iva_porcentaje": <VAT rate e.g. 21, number>,
   "iva_cantidad": <VAT amount, number>,
-  "irpf_porcentaje": <IRPF retention rate, 0 if not present, number, always positive>,
-  "irpf_cantidad": <IRPF retention amount, 0 if not present, number, always positive>,
+  "irpf_porcentaje": <IRPF retention rate 0 if not present, always positive, number>,
+  "irpf_cantidad": <IRPF retention amount 0 if not present, always positive, number>,
   "total": <total = base_imponible + iva_cantidad - irpf_cantidad, number>,
   "moneda": "<3-letter ISO currency code, typically EUR>",
   "tipo": "<ingreso if this is a sales invoice issued by the emitter, gasto if it is a purchase invoice received by the user>"
 }
 All monetary values are numbers with up to 2 decimal places. Return only the JSON, no markdown, no explanation.`;
 
-function callAzure(base64Pdf) {
+function callAzure(invoiceText) {
   const endpoint = (process.env.AZURE_AI_ENDPOINT || '').replace(/\/$/, '');
   const deployment = process.env.AZURE_AI_DEPLOYMENT;
   const apiVersion = process.env.AZURE_AI_API_VERSION;
@@ -80,16 +97,7 @@ function callAzure(base64Pdf) {
   const body = JSON.stringify({
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
-      {
-        role: 'user',
-        content: [
-          {
-            type: 'image_url',
-            image_url: { url: `data:application/pdf;base64,${base64Pdf}` },
-          },
-          { type: 'text', text: 'Extract the invoice data from this PDF.' },
-        ],
-      },
+      { role: 'user', content: invoiceText },
     ],
     response_format: { type: 'json_object' },
     max_tokens: 1024,
@@ -128,6 +136,7 @@ function callAzure(base64Pdf) {
       azErr.isAzureError = true;
       reject(azErr);
     });
+
     req.write(body);
     req.end();
   });
@@ -136,16 +145,26 @@ function callAzure(base64Pdf) {
 async function extractFromPdf(pdfPath) {
   const pdfBuffer = fs.readFileSync(pdfPath);
 
-  const pageCount = countPdfPages(pdfBuffer);
-  if (pageCount > 1) {
+  let parsed;
+  try {
+    parsed = await extractPdfText(pdfBuffer);
+  } catch (err) {
+    throw new Error(`Failed to parse PDF: ${err.message}`);
+  }
+
+  if (parsed.numPages > 1) {
     throw new Error(
-      `Multi-page PDFs are not supported (detected ${pageCount} pages). ` +
+      `Multi-page PDFs are not supported (${parsed.numPages} pages). ` +
       'Please upload a single-page PDF.'
     );
   }
 
-  const base64Pdf = pdfBuffer.toString('base64');
-  const { status, body } = await callAzure(base64Pdf);
+  const invoiceText = parsed.text.trim();
+  if (!invoiceText) {
+    throw new Error('PDF contains no extractable text. Scanned PDFs are not supported in Phase 1.');
+  }
+
+  const { status, body } = await callAzure(invoiceText);
 
   if (status !== 200) {
     const message = body?.error?.message || JSON.stringify(body).slice(0, 300);
