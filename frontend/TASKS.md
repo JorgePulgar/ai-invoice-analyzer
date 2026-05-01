@@ -10,20 +10,20 @@ Before starting any task, run `npm install` once to pull dependencies.
 
 ### Block 1.1 — Authentication UI
 
-- [ ] Implement login form
+- [x] Implement login form
   - File: `src/pages/LoginPage.tsx`
   - Controlled inputs for email and password (`useState`).
   - On submit, call `useAuth().login(email, password)`. On success, `useNavigate('/dashboard')`. On error, render `err.message` inline.
   - Client-side validation: email format (`type="email"`), password ≥ 8 chars.
-- [ ] Implement register form
+- [x] Implement register form
   - Same file. Toggle between login and register sections via local state (no separate route).
   - On submit, call `useAuth().register(email, password)`.
-- [ ] Verify auth-state redirection
+- [x] Verify auth-state redirection
   - Visiting `/login` while authed → redirects to `/dashboard` (already wired via `LoginPage`).
   - Visiting `/dashboard` or `/upload` while not authed → redirects to `/login` (already wired via `ProtectedRoute`).
-- [ ] Verify logout
+- [x] Verify logout
   - `Layout` already wires the logout button. Confirm clicking it clears the token and lands on `/login`.
-- [ ] Smoke check
+- [x] Smoke check
   - File: `scripts/smoke/auth.md` (manual checklist) — committed and referenced in the commit body.
   - Steps: register → land on dashboard → logout → land on login → login with same email → land on dashboard.
 
