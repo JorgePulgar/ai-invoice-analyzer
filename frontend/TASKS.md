@@ -71,16 +71,16 @@ Pre-requisite: Block 1.1 complete. Uses mock data for all endpoints.
 
 Pre-requisite: Block 1.1 complete. Block 1.2 is not required.
 
-- [ ] Create `DropZone` component
+- [x] Create `DropZone` component
   - File: `src/components/DropZone.tsx`
   - Props: `{ onFile: (file: File) => void; disabled?: boolean }`.
   - Wire `onDragEnter`, `onDragOver`, `onDragLeave`, `onDrop`. Visual state via Tailwind classes (`border-dashed`, `border-blue-500` on drag-over). Include a "Seleccionar archivo" button that opens a hidden `<input type="file" accept="application/pdf">`.
-- [ ] Wire the upload page
+- [x] Wire the upload page
   - File: `src/pages/UploadPage.tsx`
   - Render `<DropZone>`, a status area, and a result area (initially hidden).
   - On file: client-side validation (mime `application/pdf` AND `.pdf` extension; size ≤ 10 MB). Reject with inline error.
   - On valid file: set status "Procesando…", `disabled={true}` on DropZone, call `api.uploadFactura(file)`. On success, render the extracted JSON pretty-printed in the result area and update status to "Subido correctamente". On error, show `err.message`. Re-enable DropZone in either case.
-- [ ] Smoke check
+- [x] Smoke check
   - File: `scripts/smoke/upload.md` (manual checklist).
   - Verify: drop a PDF → loading state visible (~800 ms with mock) → JSON renders. Drop a non-PDF → error. Drop a > 10 MB file → error.
 
