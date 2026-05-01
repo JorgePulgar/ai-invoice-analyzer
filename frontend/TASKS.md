@@ -92,17 +92,17 @@ Pre-requisite: Block 1.1 complete. Block 1.2 is not required.
 
 Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` or accessible on `dev-backend`).
 
-- [ ] Flip `USE_MOCK = false` in `src/services/api.ts`
+- [x] Flip `USE_MOCK = false` in `src/services/api.ts`
   - One commit dedicated to this flip, with a body stating which backend version is being targeted.
-- [ ] End-to-end manual test
+- [x] End-to-end manual test
   - Start backend (`http://localhost:3000`), run `npm run dev` (frontend at `http://localhost:5173`), walk through register → upload (real PDF) → dashboard.
   - For every step, verify the actual response shape matches `docs/api-contract.md`.
   - If anything diverges, **stop and coordinate with the backend developer.** Do not adapt the frontend silently.
-- [ ] CORS sanity check
+- [x] CORS sanity check
   - Confirm backend `CORS_ORIGIN` includes `http://localhost:5173`.
   - If a CORS error appears, document it in `docs/LESSONS.md` and resolve it with the backend dev.
-- [ ] Run `npm run typecheck` and `npm run build` to confirm production build succeeds.
-- [ ] Smoke check
+- [x] Run `npm run typecheck` and `npm run build` to confirm production build succeeds.
+- [x] Smoke check
   - File: `scripts/smoke/integration.md` (manual checklist with steps and outcomes captured).
 
 **Block 1.4 closes with**: `git push origin dev-frontend`. **End of Phase 1.** Open a PR from `dev-frontend` to `main` summarising the phase.
