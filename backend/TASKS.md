@@ -113,26 +113,26 @@ Pre-requisite: Block 1.3 complete.
 
 Pre-requisite: Phase 1 merged to `main`.
 
-- [ ] Update `docs/api-contract.md` with new endpoints and query params
+- [x] Update `docs/api-contract.md` with new endpoints and query params
   - Add `GET /api/analytics/suppliers` shape (mirrors clients, using `emisor` / `gasto`).
   - Document `desde` / `hasta` query params on all analytics endpoints.
   - Document `tipo`, `cliente`, `proveedor`, `importe_min` params on `GET /api/facturas`.
   - **Coordinate with the frontend developer before touching the contract.**
-- [ ] Implement `getTopSuppliers` in `src/services/metrics.js`
+- [x] Implement `getTopSuppliers` in `src/services/metrics.js`
   - Expenses only (`tipo = 'gasto'`). Group by `emisor`. Order by `SUM(total) DESC`. Default limit 10.
   - Accepts optional `{ desde, hasta }` date range; apply to all subsequent metrics functions too.
-- [ ] Wire `GET /api/analytics/suppliers`
+- [x] Wire `GET /api/analytics/suppliers`
   - File: `src/routes/analytics.js`. Calls `getTopSuppliers`, wraps in `ok(res, ...)`.
   - Response shape: `{ suppliers: [{ proveedor, gastado, num_facturas }] }`.
-- [ ] Add `desde` / `hasta` query params to all analytics routes
+- [x] Add `desde` / `hasta` query params to all analytics routes
   - Routes: `summary`, `monthly`, `clients`, `suppliers`, `vat`.
   - Validate format (`YYYY-MM-DD`); return 400 on bad format. Ignore if absent (return full dataset).
   - Pass the validated range down to every `metrics.js` function.
   - Monthly still fills missing months with `0.00` within the requested range (12-month max).
-- [ ] Add filter params to `GET /api/facturas`
+- [x] Add filter params to `GET /api/facturas`
   - Params: `tipo` (`ingreso|gasto`), `cliente` (substring on `receptor`), `proveedor` (substring on `emisor`), `importe_min` (number).
   - All optional and combinable. Use `LIKE '%?%'` with prepared statements; never concatenate.
-- [ ] Smoke test for suppliers & filters
+- [x] Smoke test for suppliers & filters
   - File: `scripts/smoke/suppliers-filters.js`.
   - Seed diverse facturas (income + expenses, multiple clients/suppliers). Call suppliers endpoint; assert order and totals. Call analytics with `desde`/`hasta`; assert filtered totals differ from unfiltered. Call filtered `GET /api/facturas`; assert row counts.
 
