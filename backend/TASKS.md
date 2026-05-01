@@ -167,25 +167,25 @@ Pre-requisite: Block 2.1 complete.
 
 > **Design decision:** every upload now goes through a mandatory human-validation step before being committed to `facturas`. The upload endpoint no longer writes directly to `facturas`; it always writes to `facturas_draft` and returns the draft for the user to review and edit.
 
-- [ ] Update `docs/api-contract.md` to reflect the new upload response and draft endpoints
+- [x] Update `docs/api-contract.md` to reflect the new upload response and draft endpoints
   - `POST /api/facturas/upload` now returns 201 with the **draft** row (same shape as before but scoped to `facturas_draft`, includes `draft_id`). Coordinate with the frontend developer before merging.
-- [ ] Add `facturas_draft` table to schema
+- [x] Add `facturas_draft` table to schema
   - File: `src/db/schema.sql`. Same columns as `facturas` plus `status TEXT NOT NULL DEFAULT 'pending'` (`pending | confirmed | rejected`). No `UNIQUE` constraint on `numero` (draft is not committed yet).
-- [ ] Change `POST /api/facturas/upload` to always write to `facturas_draft`
+- [x] Change `POST /api/facturas/upload` to always write to `facturas_draft`
   - Remove any direct insert into `facturas` from this route.
   - On extraction success, insert into `facturas_draft`. Return 201 with `{ draft: <draft row> }`.
   - PDF deletion in `finally` still applies on every path (success, extraction error, DB error).
   - Errors: extractor validation → 400; Azure failure → 502; multer rejections → 413/415.
-- [ ] Implement `GET /api/facturas/drafts`
+- [x] Implement `GET /api/facturas/drafts`
   - Return all `status = 'pending'` drafts for `req.user.id`, ordered by `id DESC`.
   - Response: `{ drafts: [...] }`.
-- [ ] Implement `POST /api/facturas/drafts/:id/confirm`
+- [x] Implement `POST /api/facturas/drafts/:id/confirm`
   - Body: all factura fields (user may have edited any of them in the UI). Re-validate the submitted values using the same rules the extractor applies (field presence, date format, `tipo`, IRPF sign, total tolerance).
   - On validation failure, return 400 with a descriptive message — do not commit.
   - On success, insert into `facturas`, delete from `facturas_draft`. On `UNIQUE(user_id, numero)` violation, return 409. Return 201 with the promoted factura row.
-- [ ] Implement `DELETE /api/facturas/drafts/:id`
+- [x] Implement `DELETE /api/facturas/drafts/:id`
   - Delete the draft (scoped to `req.user.id`). Return 200 with `{ id }`, or 404 if not found / wrong user.
-- [ ] Smoke test for validation flow
+- [x] Smoke test for validation flow
   - File: `scripts/smoke/drafts.js`.
   - Upload a PDF → assert response is a draft (not a final factura). GET drafts → assert it appears. Confirm with the original fields → assert promoted factura exists in `facturas`. Upload again → confirm with an edited field (change `numero`) → assert the saved row reflects the edit. Upload a third → confirm with an invalid `total` → assert 400. Reject a draft → assert 200 and GET drafts returns empty.
 
