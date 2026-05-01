@@ -21,7 +21,7 @@ Work queue for the backend developer. Follow the per-task and per-block flows fr
   - Read `Authorization: Bearer <token>`. Verify with `JWT_SECRET`.
   - On success, set `req.user = { id, email }` and `next()`.
   - On failure (missing, malformed, expired), return 401 "Unauthorized".
-- [ ] Smoke test for auth flow
+- [x] Smoke test for auth flow
   - File: `scripts/smoke/auth.sh` (curl-based) OR `scripts/smoke/auth.js`.
   - Sequence: register a fresh user → login → call a protected endpoint with the token → call without the token (expect 401) → call with a tampered token (expect 401).
   - Capture the run output in the commit body of this task.
