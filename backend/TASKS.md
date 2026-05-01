@@ -144,16 +144,16 @@ Pre-requisite: Phase 1 merged to `main`.
 
 Pre-requisite: Block 2.1 complete.
 
-- [ ] Add `summary` column to `facturas` table
+- [x] Add `summary` column to `facturas` table
   - File: `src/db/schema.sql`. Add `summary TEXT` (nullable) to the `facturas` table definition.
   - Migration note: column is nullable, so existing rows are unaffected. Document in `LESSONS.md` if `better-sqlite3` requires any migration step.
-- [ ] Implement `POST /api/facturas/:id/summary`
+- [x] Implement `POST /api/facturas/:id/summary`
   - File: `src/routes/facturas.js`.
   - Fetch factura by `id` and `user_id`; return 404 if not found.
   - If `summary` column is already populated, return it directly (cache hit — no Azure call).
   - Otherwise, call Azure AI Foundry (GPT-4o) with a prompt requesting a financial narrative ≤ 3 sentences about the invoice's fiscal impact. Store the result in the `summary` column.
   - Response: `{ summary: "..." }` wrapped in the standard envelope.
-- [ ] Smoke test for AI summary
+- [x] Smoke test for AI summary
   - File: `scripts/smoke/summary.js`.
   - Upload a factura, call the summary endpoint, assert a non-empty string. Call again; assert the response is identical (cache hit, no second Azure call — verify via log/timing).
 
