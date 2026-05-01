@@ -34,21 +34,21 @@ Work queue for the backend developer. Follow the per-task and per-block flows fr
 
 Pre-requisite: Block 1.1 complete and merged into `dev-backend`.
 
-- [ ] Implement `services/extractor.js`
+- [x] Implement `services/extractor.js`
   - File: `src/services/extractor.js`
   - Read PDF as base64.
   - POST to Azure AI Foundry chat-completions with `response_format: { type: "json_object" }` and a system prompt pinning the extractor output JSON shape (from `docs/api-contract.md`).
   - Parse and validate per the contract's validation rules. Throw with a clear message on failure.
   - **Reject multi-page PDFs** with a clear error (multi-page support is Phase 2+).
   - Do NOT delete the PDF here.
-- [ ] Implement `POST /api/facturas/upload`
+- [x] Implement `POST /api/facturas/upload`
   - File: `src/routes/facturas.js`
   - Apply auth middleware + multer single-file middleware.
   - Wrap business logic in `try { ... } finally { fs.unlink(filePath, () => {}) }`. The `finally` deletes the PDF on every path (success, validation error, Azure error, DB error).
   - On extraction success, insert into `facturas`. On `UNIQUE(user_id, numero)` violation, return 409.
   - Return 201 with the inserted factura (full row, including `id` and `created_at`).
   - Map errors: extractor validation → 400; Azure failure → 502; multer rejections (size/type) → 413/415 via `errorHandler`.
-- [ ] Verify PDF deletion under all error paths
+- [x] Verify PDF deletion under all error paths
   - Manually trigger each error path (invalid file, oversized file, duplicate numero, simulated Azure 500). After each, confirm `uploads/` is empty.
   - Capture the verification commands and outputs in the commit body.
 - [ ] Smoke test for upload flow
