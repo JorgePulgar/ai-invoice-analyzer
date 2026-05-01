@@ -74,9 +74,29 @@ router.post('/upload', multerUpload, async (req, res, next) => {
 });
 
 // GET /api/facturas
+// Optional query params: tipo, cliente (substring on receptor),
+// proveedor (substring on emisor), importe_min.
 // 200 → { success: true, data: { facturas: [...] } }
 router.get('/', async (req, res, next) => {
   try {
+    const { tipo, cliente, proveedor, importe_min: impMin } = req.query;
+
+    if (tipo !== undefined && tipo !== 'ingreso' && tipo !== 'gasto') {
+      return fail(res, '"tipo" must be "ingreso" or "gasto"', 400);
+    }
+    const importe_min = impMin !== undefined ? Number(impMin) : undefined;
+    if (importe_min !== undefined && (!Number.isFinite(importe_min) || importe_min < 0)) {
+      return fail(res, '"importe_min" must be a non-negative number', 400);
+    }
+
+    const conditions = ['user_id = ?'];
+    const params = [req.user.id];
+
+    if (tipo)             { conditions.push('tipo = ?');        params.push(tipo); }
+    if (cliente)          { conditions.push('receptor LIKE ?'); params.push(`%${cliente}%`); }
+    if (proveedor)        { conditions.push('emisor LIKE ?');   params.push(`%${proveedor}%`); }
+    if (importe_min >= 0) { conditions.push('total >= ?');      params.push(importe_min); }
+
     const db = getDb();
     const rows = db
       .prepare(
@@ -84,10 +104,10 @@ router.get('/', async (req, res, next) => {
                 base_imponible, iva_porcentaje, iva_cantidad,
                 irpf_porcentaje, irpf_cantidad, total, moneda, tipo, created_at
          FROM facturas
-         WHERE user_id = ?
+         WHERE ${conditions.join(' AND ')}
          ORDER BY fecha DESC, id DESC`
       )
-      .all(req.user.id);
+      .all(...params);
 
     const facturas = rows.map((r) => ({
       ...r,
