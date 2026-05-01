@@ -7,6 +7,7 @@ import { TopClientsList } from '../components/TopClientsList';
 import { VatTable } from '../components/VatTable';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
+import { AiSummaryCard } from '../components/AiSummaryCard';
 import { api } from '../services/api';
 import { formatCurrency } from '../utils/format';
 import {
@@ -18,7 +19,7 @@ import {
   deriveClients,
   deriveVat,
 } from '../utils/filters';
-import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura } from '../types';
+import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura, AiSummary } from '../types';
 
 export function DashboardPage() {
   const [searchParams] = useSearchParams();
@@ -29,6 +30,7 @@ export function DashboardPage() {
   const [serverClients, setServerClients] = useState<ClientEntry[]>([]);
   const [serverVat, setServerVat] = useState<VatEntry[]>([]);
   const [facturasOriginal, setFacturasOriginal] = useState<Factura[]>([]);
+  const [aiSummary, setAiSummary] = useState<AiSummary | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,13 +42,15 @@ export function DashboardPage() {
       api.getClients(),
       api.getVat(),
       api.listFacturas(),
+      api.getAiSummary(),
     ])
-      .then(([s, m, c, v, f]) => {
+      .then(([s, m, c, v, f, ai]) => {
         setServerSummary(s);
         setServerMonthly(m);
         setServerClients(c);
         setServerVat(v);
         setFacturasOriginal(f.facturas);
+        setAiSummary(ai);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Error al cargar datos');
@@ -110,6 +114,7 @@ export function DashboardPage() {
 
   return (
     <Layout>
+      <AiSummaryCard summary={aiSummary} loading={false} />
       <DashboardFilters facturas={facturasOriginal} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">

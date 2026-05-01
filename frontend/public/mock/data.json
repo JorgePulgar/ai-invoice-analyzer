@@ -239,5 +239,9 @@
       "iva_soportado": 0,
       "iva_a_pagar": 0
     }
-  ]
+  ],
+  "aiSummary": {
+    "narrative": "Tus ingresos del periodo (19.608 €) superan ampliamente los gastos (889,50 €), dejando un beneficio neto del 95,5%. Telefónica Movistar concentra el 37% de tu facturación; vigilar la dependencia de un único cliente es recomendable. El IVA pendiente del trimestre actual asciende a 877,38 €.",
+    "generated_at": "2026-04-30T10:00:00.000Z"
+  }
 }
