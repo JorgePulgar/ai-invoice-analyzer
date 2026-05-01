@@ -7,6 +7,7 @@ const { generateSummary } = require('../services/summarizer');
 const { getDb } = require('../db/database');
 const { ok, fail } = require('../utils/response');
 const { validateFacturaFields } = require('../utils/validate');
+const { uploadLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -27,7 +28,7 @@ function multerUpload(req, res, next) {
 // POST /api/facturas/upload  (multipart/form-data, field: "file")
 // Extracts invoice data and stores it as a pending draft for user review.
 // 201 → { success: true, data: { draft: <draft row> } }
-router.post('/upload', multerUpload, async (req, res, next) => {
+router.post('/upload', uploadLimiter, multerUpload, async (req, res, next) => {
   if (!req.file) return fail(res, 'No file uploaded', 400);
 
   const filePath = req.file.path;

@@ -2,10 +2,10 @@
 // The caller is responsible for deleting the PDF after this function returns
 // (success or error). This function never deletes the file.
 //
-// Implementation note: Azure AI Foundry rejects data:application/pdf image URLs
-// (only image/* MIME types accepted). We therefore extract the text layer from
-// the PDF with pdfjs-dist (dynamic import, ESM) and send it as a plain text
-// user message. See docs/LESSONS.md for the full incident record.
+// Supports single- and multi-page PDFs. All pages are extracted via pdfjs-dist
+// (dynamic import, ESM) and sent as a single text message. Azure AI Foundry
+// rejects data:application/pdf image URLs; text extraction avoids that and
+// requires no native rendering dependencies. See docs/LESSONS.md for details.
 
 const fs = require('fs');
 const path = require('path');
@@ -29,7 +29,11 @@ async function extractPdfText(buffer) {
     pageTexts.push(content.items.map(item => item.str).join(' '));
   }
 
-  return { numPages, text: pageTexts.join('\n') };
+  const text = numPages === 1
+    ? pageTexts[0]
+    : pageTexts.map((t, i) => `[Página ${i + 1} de ${numPages}]\n${t}`).join('\n\n');
+
+  return { numPages, text };
 }
 
 const REQUIRED_FIELDS = [
@@ -150,13 +154,6 @@ async function extractFromPdf(pdfPath) {
     parsed = await extractPdfText(pdfBuffer);
   } catch (err) {
     throw new Error(`Failed to parse PDF: ${err.message}`);
-  }
-
-  if (parsed.numPages > 1) {
-    throw new Error(
-      `Multi-page PDFs are not supported (${parsed.numPages} pages). ` +
-      'Please upload a single-page PDF.'
-    );
   }
 
   const invoiceText = parsed.text.trim();

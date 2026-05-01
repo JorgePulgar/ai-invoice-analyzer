@@ -27,6 +27,26 @@ This works for all digitally-generated invoices (which have an embedded text lay
 
 ---
 
+## Multi-page PDF support: text extraction preferred over image rendering
+
+**Context (Phase 2, Block 2.4):**
+The initial spec called for converting each PDF page to a PNG image with `pdf2pic` and sending them as separate `image_url` content parts. This mirrors the approach GPT-4o vision APIs typically use.
+
+**Why we stayed with text extraction instead:**
+
+1. `pdf2pic` requires a system binary (ImageMagick or Ghostscript) that is not available in all deployment environments and cannot be installed via npm alone.
+2. Rendering PDFs to images via `pdfjs-dist` + `canvas` requires compiling the `canvas` native module (libcairo, libpango system dependencies) — brittle in CI and on Windows.
+3. `pdfjs-dist` (already installed) already extracts text from every page in a loop; removing the single-page guard was the only code change needed.
+4. For digitally-generated invoices (the primary target), text extraction is cleaner and more reliable for structured data extraction than OCR over rendered images.
+
+**Fix applied:**
+Removed the `numPages > 1` guard. `extractPdfText` now returns all pages joined as `[Página N de M]\n<text>` blocks, which gives GPT-4o clear page-boundary hints without requiring image rendering.
+
+**Watch for next time:**
+If scanned (non-text-layer) multi-page PDFs become a requirement, revisit image rendering with a prebuilt canvas package such as `@napi-rs/canvas` (no compilation needed, ships pre-built binaries for all major platforms). That change is isolated to `extractPdfText` in `src/services/extractor.js`.
+
+---
+
 ## SQLite `ALTER TABLE ADD COLUMN` has no `IF NOT EXISTS` (SQLite < 3.37)
 
 **Error seen:**
