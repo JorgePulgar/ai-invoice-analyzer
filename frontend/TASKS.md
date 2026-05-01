@@ -35,31 +35,31 @@ Before starting any task, run `npm install` once to pull dependencies.
 
 Pre-requisite: Block 1.1 complete. Uses mock data for all endpoints.
 
-- [ ] Create `KpiCard` component
+- [x] Create `KpiCard` component
   - File: `src/components/KpiCard.tsx`
   - Props: `{ label: string; value: string }`. Renders a card with label and value using Tailwind.
-- [ ] Create `MonthlyChart` component
+- [x] Create `MonthlyChart` component
   - File: `src/components/MonthlyChart.tsx`
   - Props: `{ data: MonthlyEntry[] }`.
   - Use `<Bar>` from `react-chartjs-2` with two datasets (`ingresos`, `gastos`). Register Chart.js components inside this file.
   - Format y-axis ticks as currency via `formatCurrency`.
-- [ ] Create `TopClientsList` component
+- [x] Create `TopClientsList` component
   - File: `src/components/TopClientsList.tsx`
   - Props: `{ clients: ClientEntry[] }`. Renders an ordered list "Cliente — €X (N facturas)".
-- [ ] Create `VatTable` component
+- [x] Create `VatTable` component
   - File: `src/components/VatTable.tsx`
   - Props: `{ vat: VatEntry[] }`. Renders a 4-row table with quarter labels (`T1 2026`, etc.).
-- [ ] Create `FacturasTable` component
+- [x] Create `FacturasTable` component
   - File: `src/components/FacturasTable.tsx`
   - Props: `{ facturas: Factura[]; onDelete: (id: number) => void }`.
   - Each row has a delete button calling `onDelete(id)`. Use `formatCurrency` for the total column and `formatDate` for `fecha`.
-- [ ] Wire the dashboard page
+- [x] Wire the dashboard page
   - File: `src/pages/DashboardPage.tsx`
   - On mount (`useEffect`), call `Promise.all([api.getSummary(), api.getMonthly(), api.getClients(), api.getVat(), api.listFacturas()])`. Store each in its own `useState`.
   - Render the 5 sections via the components above.
   - Wire `handleDelete = async (id) => { await api.deleteFactura(id); /* re-fetch facturas */ }`.
   - Show a loading state while the initial fetch is pending and an error message if anything throws.
-- [ ] Smoke check
+- [x] Smoke check
   - File: `scripts/smoke/dashboard.md` (manual checklist).
   - Verify: 4 KPIs populated, chart renders with both datasets, top clients listed, VAT table shows 4 rows, facturas table renders mock entries, delete removes a row.
 
