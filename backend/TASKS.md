@@ -197,14 +197,14 @@ Pre-requisite: Block 2.1 complete.
 
 Pre-requisite: Block 2.1 complete.
 
-- [ ] Multi-page PDF support in extractor
+- [x] Multi-page PDF support in extractor
   - Add `pdf2pic` (or equivalent) to convert each PDF page to an image server-side.
   - Send all page images as separate `image_url` content parts in a single GPT-4o message.
   - Remove the single-page rejection added in Phase 1. Update `LESSONS.md` with any gotcha found during implementation.
-- [ ] Rate limiting on `POST /api/facturas/upload`
+- [x] Rate limiting on `POST /api/facturas/upload`
   - Use `express-rate-limit` with a per-user key (`req.user.id`).
   - Limit: 10 requests / 60 seconds (adjust via env var `UPLOAD_RATE_LIMIT`). Return 429 on exceeded limit.
-- [ ] Smoke test for multi-page & rate limit
+- [x] Smoke test for multi-page & rate limit
   - File: `scripts/smoke/multipage-ratelimit.js`. Fixture: a 2-page PDF under `scripts/smoke/fixtures/`. Assert extraction returns data. Assert 11th upload within 60 s returns 429.
 
 **Block 2.4 closes with**: `git push origin dev-backend`. **End of Phase 2.** Open a PR from `dev-backend` to `main` summarising the phase.
