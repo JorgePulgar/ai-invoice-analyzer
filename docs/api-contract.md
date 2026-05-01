@@ -133,6 +133,15 @@ Errors:
 
 Auth required.
 
+Query params (all optional, combinable):
+- `tipo` — `ingreso` or `gasto`
+- `cliente` — substring match on `receptor` (case-insensitive)
+- `proveedor` — substring match on `emisor` (case-insensitive)
+- `importe_min` — number; only facturas with `total >= importe_min`
+
+Errors:
+- 400 — `tipo` is not `ingreso` or `gasto`, or `importe_min` is not a valid non-negative number.
+
 Response 200:
 ```json
 {
@@ -165,6 +174,15 @@ Errors:
 ### Analytics
 
 All require auth. All wrap their payload in the standard envelope.
+
+#### Date-range query params (all analytics endpoints)
+
+All analytics endpoints accept two optional date-range params:
+
+- `desde` — `YYYY-MM-DD` start date (inclusive)
+- `hasta` — `YYYY-MM-DD` end date (inclusive)
+
+Both are optional and independent (you can pass only one). Return 400 on a badly formatted value. When absent the endpoint returns data for all available dates (or the default window described per endpoint).
 
 #### `GET /api/analytics/summary`
 
@@ -205,7 +223,8 @@ Response 200 — `data` is an array of monthly buckets, last 12 months including
 ```
 
 - `mes` format: `YYYY-MM`.
-- Months with no facturas appear with `0.00` for both fields. Do not skip months; the array always has 12 entries in chronological order.
+- Without a date range: returns the last 12 months including the current one (always 12 entries).
+- With a date range: returns months from `desde`-month to `hasta`-month, up to 12 (most recent). Months with no data still appear with `0.00`.
 
 #### `GET /api/analytics/clients`
 
@@ -239,6 +258,24 @@ Response 200 — `data` is an array of 4 quarters of the current calendar year:
 - `iva_repercutido` = sum of `iva_cantidad` over income invoices in the quarter.
 - `iva_soportado` = sum of `iva_cantidad` over expense invoices in the quarter.
 - `iva_a_pagar = iva_repercutido - iva_soportado`.
+
+#### `GET /api/analytics/suppliers`
+
+Auth required. Accepts `desde` / `hasta` date-range params (see above).
+
+Response 200 — `data`:
+```json
+{
+  "suppliers": [
+    { "proveedor": "Empresa Suministros SA", "gastado": 3200.00, "num_facturas": 4 },
+    { "proveedor": "Oficina Total SL",       "gastado": 890.50,  "num_facturas": 2 }
+  ]
+}
+```
+
+- Source: facturas with `tipo = 'gasto'`, grouped by `emisor`.
+- Ordered by `gastado` DESC.
+- Default limit: 10.
 
 ---
 
