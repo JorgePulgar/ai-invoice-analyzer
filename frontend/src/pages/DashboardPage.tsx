@@ -69,10 +69,14 @@ export function DashboardPage() {
 
   const kpis = summary
     ? [
-        { label: 'Ingresos totales', value: formatCurrency(summary.ingresos_totales) },
-        { label: 'Gastos totales', value: formatCurrency(summary.gastos_totales) },
-        { label: 'Beneficio neto', value: formatCurrency(summary.beneficio_neto) },
-        { label: 'IVA a pagar', value: formatCurrency(summary.iva_a_pagar) },
+        { label: 'Ingresos totales', value: formatCurrency(summary.ingresos_totales), tone: 'up' as const },
+        { label: 'Gastos totales', value: formatCurrency(summary.gastos_totales), tone: 'down' as const },
+        {
+          label: 'Beneficio neto',
+          value: formatCurrency(summary.beneficio_neto),
+          tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
+        },
+        { label: 'IVA a pagar', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
       ]
     : [];
 
@@ -80,7 +84,7 @@ export function DashboardPage() {
     <Layout>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} />
+          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} />
         ))}
       </div>
 

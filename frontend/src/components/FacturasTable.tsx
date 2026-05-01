@@ -1,4 +1,5 @@
 import type { Factura } from '../types';
+import { TipoBadge } from './TipoBadge';
 import { formatCurrency, formatDate } from '../utils/format';
 
 interface FacturasTableProps {
@@ -33,22 +34,23 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
           </thead>
           <tbody className="divide-y divide-bn-hairline">
             {facturas.map((f) => (
-              <tr key={f.id} className="hover:bg-bn-elevated transition-colors">
+              <tr
+                key={f.id}
+                className={`hover:bg-bn-elevated transition-colors border-l-2 ${
+                  f.tipo === 'ingreso' ? 'border-l-bn-up/40' : 'border-l-bn-down/40'
+                }`}
+              >
                 <td className="px-6 py-3 font-medium text-bn-body">{f.numero}</td>
                 <td className="px-6 py-3 text-bn-muted-strong">{formatDate(f.fecha)}</td>
                 <td className="px-6 py-3 text-bn-muted-strong max-w-[160px] truncate">{f.emisor}</td>
                 <td className="px-6 py-3 text-bn-muted-strong max-w-[160px] truncate">{f.receptor}</td>
-                <td className="px-6 py-3 text-right font-semibold text-bn-yellow">
+                <td className={`px-6 py-3 text-right font-semibold ${
+                  f.tipo === 'ingreso' ? 'text-bn-up' : 'text-bn-down'
+                }`}>
                   {formatCurrency(f.total, f.moneda)}
                 </td>
                 <td className="px-6 py-3">
-                  <span
-                    className={`text-xs font-semibold ${
-                      f.tipo === 'ingreso' ? 'text-bn-up' : 'text-bn-down'
-                    }`}
-                  >
-                    {f.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}
-                  </span>
+                  <TipoBadge tipo={f.tipo} />
                 </td>
                 <td className="px-6 py-3 text-right">
                   <button

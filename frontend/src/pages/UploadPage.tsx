@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { DropZone } from '../components/DropZone';
+import { TipoBadge } from '../components/TipoBadge';
 import { api } from '../services/api';
 import type { Factura } from '../types';
 
@@ -82,10 +83,11 @@ export function UploadPage() {
         {/* Result */}
         {result && (
           <div className="mt-6 bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
-            <div className="px-6 py-3 border-b border-bn-hairline">
+            <div className="px-6 py-3 border-b border-bn-hairline flex items-center justify-between">
               <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
                 Datos extraídos
               </h3>
+              <TipoBadge tipo={result.tipo} size="md" />
             </div>
             <pre className="px-6 py-4 text-xs text-bn-body overflow-x-auto leading-relaxed">
               {JSON.stringify(result, null, 2)}

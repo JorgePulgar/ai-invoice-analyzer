@@ -109,14 +109,62 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ---
 
-## Phase 2 — Nice-to-have (high level)
+## Phase 2
 
-Listed without task-level detail; refined when the phase starts.
+### Block 2.1 — Ingreso/Gasto visual differentiation
 
-- AI summary section on dashboard (consumes new endpoint).
-- Manual validation form between extraction and persistence.
-- Filters on dashboard (period, client, type) — likely a `<DashboardFilters>` component + URL state.
-- Expense vs income visual differentiation (badge/colour) in tables and chart.
+- [x] Create `TipoBadge` component
+  - File: `src/components/TipoBadge.tsx`
+  - Props: `{ tipo: Tipo; size?: 'sm' | 'md' }`. Renders pill with ▲/▼ glyph and `bn-up`/`bn-down` colours.
+- [x] Tone `KpiCard` by ingreso/gasto
+  - Add `tone?: 'up' | 'down' | 'neutral'` prop. Value text coloured accordingly with matching glyph.
+- [x] Apply tipo styling across dashboard components
+  - `DashboardPage`: pass `tone` to each KPI (ingresos→up, gastos→down, beneficio→dynamic, IVA→neutral).
+  - `FacturasTable`: replace text tipo cell with `<TipoBadge>`, colour total cell by tipo, add left rail border by tipo.
+  - `TopClientsList`: add ▲ glyph to client facturado amounts (all ingreso).
+  - `UploadPage`: show `<TipoBadge>` in the extracted-data result header.
+
+**Block 2.1 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.2 — Dashboard filters (client-side, URL state)
+
+- [ ] Create `src/utils/filters.ts`
+  - `FilterState` type, `parseFilters`, `applyFilters`, `deriveSummary`, `deriveMonthly`, `deriveClients`, `deriveVat`.
+- [ ] Create `DashboardFilters` component
+  - File: `src/components/DashboardFilters.tsx`. Periodo / Tipo / Cliente selects wired to `useSearchParams`.
+- [ ] Wire filters into `DashboardPage`
+  - Fetch full facturas on mount; derive analytics client-side when filters are non-default. `facturasOriginal` state feeds cliente dropdown.
+
+**Block 2.2 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.3 — AI summary section (UI under USE_MOCK)
+
+- [ ] Add `AiSummary` type and mock data
+  - `src/types/index.ts` + `public/mock/data.json` `aiSummary` field.
+- [ ] Add `api.getAiSummary()` method
+  - Returns mock under `USE_MOCK`; returns `null` under live backend (no throw, no fetch).
+- [ ] Create `AiSummaryCard` component
+  - File: `src/components/AiSummaryCard.tsx`. Loading skeleton, null → hidden, present → narrative card with yellow left border.
+- [ ] Wire into `DashboardPage` above KPI grid.
+
+**Block 2.3 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.4 — Manual validation form (UI under USE_MOCK)
+
+- [ ] Add `DraftFactura` type and extract/confirm api methods
+  - `src/types/index.ts`, `src/services/api.ts`. Fallback to Phase 1 upload under live backend.
+- [ ] Create `FacturaForm` component
+  - File: `src/components/FacturaForm.tsx`. All Factura fields, inline validation, total-mismatch warning chip.
+- [ ] Wire two-step upload flow into `UploadPage`
+  - New status states `extracting | review | saving`. Live-backend fallback to direct upload.
+
+**Block 2.4 closes with**: `git push origin dev-frontend`. **End of Phase 2.** Open a PR from `dev-frontend` to `main` summarising the phase.
 
 ## Phase 3 — Stretch (high level)
 

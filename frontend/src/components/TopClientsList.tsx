@@ -22,7 +22,10 @@ export function TopClientsList({ clients }: TopClientsListProps) {
               <span className="text-sm text-bn-body truncate">{client.cliente}</span>
             </div>
             <div className="text-right ml-4 shrink-0">
-              <p className="text-sm font-semibold text-bn-yellow">{formatCurrency(client.facturado)}</p>
+              <p className="text-sm font-semibold text-bn-up flex items-center justify-end gap-1">
+                <span className="text-[10px]">▲</span>
+                {formatCurrency(client.facturado)}
+              </p>
               <p className="text-xs text-bn-muted">
                 {client.num_facturas} {client.num_facturas === 1 ? 'factura' : 'facturas'}
               </p>
