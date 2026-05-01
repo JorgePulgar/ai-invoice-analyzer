@@ -14,7 +14,7 @@ import type {
   VatEntry,
 } from '../types';
 
-const USE_MOCK = true; // flip to false when the backend is ready
+const USE_MOCK = false; // flip to false when the backend is ready
 const API_BASE = 'http://localhost:3000/api';
 const MOCK_URL = '/mock/data.json';
 
