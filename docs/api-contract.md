@@ -99,30 +99,34 @@ Limits:
 - `Content-Type: application/pdf` only.
 - 10 MB max.
 
-Response 201 — `data` is the inserted factura:
+**Phase 2 behaviour:** extraction always writes to `facturas_draft` (pending review). The final `facturas` row is created only after the user confirms via `POST /api/facturas/drafts/:id/confirm`.
+
+Response 201 — `data.draft` is the created draft (same shape as a factura plus `status`):
 ```json
 {
-  "id": 42,
-  "numero": "F-2026-001",
-  "fecha": "2026-01-15",
-  "emisor": "Empresa Emisora SL",
-  "receptor": "Empresa Receptora SL",
-  "concepto": "Consultoría enero 2026",
-  "base_imponible": 1500.00,
-  "iva_porcentaje": 21,
-  "iva_cantidad": 315.00,
-  "irpf_porcentaje": 15,
-  "irpf_cantidad": 225.00,
-  "total": 1590.00,
-  "moneda": "EUR",
-  "tipo": "ingreso",
-  "created_at": "2026-04-30T10:00:00.000Z"
+  "draft": {
+    "id": 7,
+    "numero": "F-2026-001",
+    "fecha": "2026-01-15",
+    "emisor": "Empresa Emisora SL",
+    "receptor": "Empresa Receptora SL",
+    "concepto": "Consultoría enero 2026",
+    "base_imponible": 1500.00,
+    "iva_porcentaje": 21,
+    "iva_cantidad": 315.00,
+    "irpf_porcentaje": 15,
+    "irpf_cantidad": 225.00,
+    "total": 1590.00,
+    "moneda": "EUR",
+    "tipo": "ingreso",
+    "status": "pending",
+    "created_at": "2026-04-30T10:00:00.000Z"
+  }
 }
 ```
 
 Errors:
 - 400 — extraction or validation failed.
-- 409 — duplicate `numero` for this user (UNIQUE constraint).
 - 413 — file too large.
 - 415 — not a PDF.
 - 502 — Azure AI Foundry error.
@@ -132,6 +136,15 @@ Errors:
 #### `GET /api/facturas`
 
 Auth required.
+
+Query params (all optional, combinable):
+- `tipo` — `ingreso` or `gasto`
+- `cliente` — substring match on `receptor` (case-insensitive)
+- `proveedor` — substring match on `emisor` (case-insensitive)
+- `importe_min` — number; only facturas with `total >= importe_min`
+
+Errors:
+- 400 — `tipo` is not `ingreso` or `gasto`, or `importe_min` is not a valid non-negative number.
 
 Response 200:
 ```json
@@ -160,11 +173,78 @@ Response 200:
 Errors:
 - 404 — factura does not exist or belongs to another user (same message — no enumeration).
 
+#### `GET /api/facturas/drafts`
+
+Auth required. Returns all `pending` drafts for the authenticated user.
+
+Response 200:
+```json
+{ "success": true, "data": { "drafts": [ { "id": 7, "numero": "...", "status": "pending", ... } ] } }
+```
+
+Order: `id DESC`.
+
+#### `POST /api/facturas/drafts/:id/confirm`
+
+Auth required. Promotes a draft to a final factura. The request body may contain edited values for any field — these are what get saved, not the original extracted values.
+
+Request body (all fields required):
+```json
+{
+  "numero": "F-2026-001",
+  "fecha": "2026-01-15",
+  "emisor": "Empresa Emisora SL",
+  "receptor": "Empresa Receptora SL",
+  "concepto": "Consultoría enero 2026",
+  "base_imponible": 1500.00,
+  "iva_porcentaje": 21,
+  "iva_cantidad": 315.00,
+  "irpf_porcentaje": 15,
+  "irpf_cantidad": 225.00,
+  "total": 1590.00,
+  "moneda": "EUR",
+  "tipo": "ingreso"
+}
+```
+
+Response 201 — `data` is the promoted factura row (same shape as `GET /api/facturas` items):
+```json
+{ "id": 42, "numero": "F-2026-001", ..., "created_at": "2026-04-30T10:00:00.000Z" }
+```
+
+Errors:
+- 400 — submitted values fail validation (missing field, bad date, total mismatch, etc.).
+- 404 — draft does not exist or belongs to another user (same message — no enumeration).
+- 409 — `numero` already exists in `facturas` for this user (UNIQUE constraint).
+
+On success the draft row is deleted from `facturas_draft`.
+
+#### `DELETE /api/facturas/drafts/:id`
+
+Auth required. Rejects (deletes) a draft. Scoped to the authenticated user.
+
+Response 200:
+```json
+{ "success": true, "data": { "id": 7 } }
+```
+
+Errors:
+- 404 — draft does not exist or belongs to another user (same message — no enumeration).
+
 ---
 
 ### Analytics
 
 All require auth. All wrap their payload in the standard envelope.
+
+#### Date-range query params (all analytics endpoints)
+
+All analytics endpoints accept two optional date-range params:
+
+- `desde` — `YYYY-MM-DD` start date (inclusive)
+- `hasta` — `YYYY-MM-DD` end date (inclusive)
+
+Both are optional and independent (you can pass only one). Return 400 on a badly formatted value. When absent the endpoint returns data for all available dates (or the default window described per endpoint).
 
 #### `GET /api/analytics/summary`
 
@@ -205,7 +285,8 @@ Response 200 — `data` is an array of monthly buckets, last 12 months including
 ```
 
 - `mes` format: `YYYY-MM`.
-- Months with no facturas appear with `0.00` for both fields. Do not skip months; the array always has 12 entries in chronological order.
+- Without a date range: returns the last 12 months including the current one (always 12 entries).
+- With a date range: returns months from `desde`-month to `hasta`-month, up to 12 (most recent). Months with no data still appear with `0.00`.
 
 #### `GET /api/analytics/clients`
 
@@ -239,6 +320,24 @@ Response 200 — `data` is an array of 4 quarters of the current calendar year:
 - `iva_repercutido` = sum of `iva_cantidad` over income invoices in the quarter.
 - `iva_soportado` = sum of `iva_cantidad` over expense invoices in the quarter.
 - `iva_a_pagar = iva_repercutido - iva_soportado`.
+
+#### `GET /api/analytics/suppliers`
+
+Auth required. Accepts `desde` / `hasta` date-range params (see above).
+
+Response 200 — `data`:
+```json
+{
+  "suppliers": [
+    { "proveedor": "Empresa Suministros SA", "gastado": 3200.00, "num_facturas": 4 },
+    { "proveedor": "Oficina Total SL",       "gastado": 890.50,  "num_facturas": 2 }
+  ]
+}
+```
+
+- Source: facturas with `tipo = 'gasto'`, grouped by `emisor`.
+- Ordered by `gastado` DESC.
+- Default limit: 10.
 
 ---
 
