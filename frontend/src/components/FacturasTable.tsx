@@ -1,0 +1,68 @@
+import type { Factura } from '../types';
+import { formatCurrency, formatDate } from '../utils/format';
+
+interface FacturasTableProps {
+  facturas: Factura[];
+  onDelete: (id: number) => void;
+}
+
+export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
+  const handleDelete = (id: number, numero: string) => {
+    if (window.confirm(`¿Eliminar la factura ${numero}?`)) {
+      onDelete(id);
+    }
+  };
+
+  return (
+    <div className="bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
+      <div className="px-6 py-4 border-b border-bn-hairline">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">Facturas</h3>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-bn-elevated">
+            <tr className="text-xs text-bn-muted uppercase">
+              <th className="text-left px-6 py-3 font-medium">Número</th>
+              <th className="text-left px-6 py-3 font-medium">Fecha</th>
+              <th className="text-left px-6 py-3 font-medium">Emisor</th>
+              <th className="text-left px-6 py-3 font-medium">Receptor</th>
+              <th className="text-right px-6 py-3 font-medium">Total</th>
+              <th className="text-left px-6 py-3 font-medium">Tipo</th>
+              <th className="px-6 py-3" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-bn-hairline">
+            {facturas.map((f) => (
+              <tr key={f.id} className="hover:bg-bn-elevated transition-colors">
+                <td className="px-6 py-3 font-medium text-bn-body">{f.numero}</td>
+                <td className="px-6 py-3 text-bn-muted-strong">{formatDate(f.fecha)}</td>
+                <td className="px-6 py-3 text-bn-muted-strong max-w-[160px] truncate">{f.emisor}</td>
+                <td className="px-6 py-3 text-bn-muted-strong max-w-[160px] truncate">{f.receptor}</td>
+                <td className="px-6 py-3 text-right font-semibold text-bn-yellow">
+                  {formatCurrency(f.total, f.moneda)}
+                </td>
+                <td className="px-6 py-3">
+                  <span
+                    className={`text-xs font-semibold ${
+                      f.tipo === 'ingreso' ? 'text-bn-up' : 'text-bn-down'
+                    }`}
+                  >
+                    {f.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}
+                  </span>
+                </td>
+                <td className="px-6 py-3 text-right">
+                  <button
+                    onClick={() => handleDelete(f.id, f.numero)}
+                    className="text-xs text-bn-muted hover:text-bn-down transition-colors font-medium"
+                  >
+                    Eliminar
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
