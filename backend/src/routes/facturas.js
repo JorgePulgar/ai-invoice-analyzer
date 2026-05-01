@@ -6,6 +6,7 @@ const { extractFromPdf } = require('../services/extractor');
 const { generateSummary } = require('../services/summarizer');
 const { getDb } = require('../db/database');
 const { ok, fail } = require('../utils/response');
+const { validateFacturaFields } = require('../utils/validate');
 
 const router = express.Router();
 
@@ -16,7 +17,6 @@ router.use(authenticate);
 function multerUpload(req, res, next) {
   upload.single('file')(req, res, (err) => {
     if (!err) return next();
-    // Delete any partially-written file so the no-PDF-on-disk invariant holds.
     if (req.file) fs.unlink(req.file.path, () => {});
     if (err.code === 'LIMIT_FILE_SIZE') return fail(res, 'File too large', 413);
     if (err.message === 'Only PDF files are accepted') return fail(res, 'Only PDF files are accepted', 415);
@@ -25,7 +25,8 @@ function multerUpload(req, res, next) {
 }
 
 // POST /api/facturas/upload  (multipart/form-data, field: "file")
-// 201 → { success: true, data: <factura> }
+// Extracts invoice data and stores it as a pending draft for user review.
+// 201 → { success: true, data: { draft: <draft row> } }
 router.post('/upload', multerUpload, async (req, res, next) => {
   if (!req.file) return fail(res, 'No file uploaded', 400);
 
@@ -40,23 +41,110 @@ router.post('/upload', multerUpload, async (req, res, next) => {
     }
 
     const db = getDb();
-    let row;
+    const row = db
+      .prepare(
+        `INSERT INTO facturas_draft
+           (user_id, numero, fecha, emisor, receptor, concepto,
+            base_imponible, iva_porcentaje, iva_cantidad,
+            irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         RETURNING *`
+      )
+      .get(
+        req.user.id, extracted.numero, extracted.fecha, extracted.emisor,
+        extracted.receptor, extracted.concepto, extracted.base_imponible,
+        extracted.iva_porcentaje, extracted.iva_cantidad, extracted.irpf_porcentaje,
+        extracted.irpf_cantidad, extracted.total, extracted.moneda, extracted.tipo
+      );
+
+    const { user_id: _uid, ...draft } = row;
+    draft.created_at = draft.created_at.replace(' ', 'T') + '.000Z';
+    return ok(res, { draft }, 201);
+  } catch (err) {
+    next(err);
+  } finally {
+    fs.unlink(filePath, () => {});
+  }
+});
+
+// GET /api/facturas/drafts
+// Returns all pending drafts for the authenticated user, newest first.
+// 200 → { success: true, data: { drafts: [...] } }
+router.get('/drafts', async (req, res, next) => {
+  try {
+    const db = getDb();
+    const rows = db
+      .prepare(
+        `SELECT id, numero, fecha, emisor, receptor, concepto,
+                base_imponible, iva_porcentaje, iva_cantidad,
+                irpf_porcentaje, irpf_cantidad, total, moneda, tipo, status, created_at
+         FROM facturas_draft
+         WHERE user_id = ? AND status = 'pending'
+         ORDER BY id DESC`
+      )
+      .all(req.user.id);
+
+    const drafts = rows.map((r) => ({
+      ...r,
+      created_at: r.created_at.replace(' ', 'T') + '.000Z',
+    }));
+    return ok(res, { drafts });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/facturas/drafts/:id/confirm
+// Re-validates the submitted fields (user may have edited them), then atomically
+// inserts into facturas and deletes the draft.
+// 201 → { success: true, data: <promoted factura row> }
+router.post('/drafts/:id/confirm', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const draft = db
+      .prepare('SELECT * FROM facturas_draft WHERE id = ? AND user_id = ?')
+      .get(id, req.user.id);
+
+    if (!draft) return fail(res, 'Not found', 404);
+
+    // Merge draft defaults with any body overrides; coerce numeric strings.
+    const NUMERIC = ['base_imponible', 'iva_porcentaje', 'iva_cantidad',
+                     'irpf_porcentaje', 'irpf_cantidad', 'total'];
+    const body = { ...req.body };
+    for (const f of NUMERIC) {
+      if (body[f] !== undefined) body[f] = Number(body[f]);
+    }
+
     try {
-      row = db
-        .prepare(
-          `INSERT INTO facturas
-             (user_id, numero, fecha, emisor, receptor, concepto,
-              base_imponible, iva_porcentaje, iva_cantidad,
-              irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-           RETURNING *`
-        )
-        .get(
-          req.user.id, extracted.numero, extracted.fecha, extracted.emisor,
-          extracted.receptor, extracted.concepto, extracted.base_imponible,
-          extracted.iva_porcentaje, extracted.iva_cantidad, extracted.irpf_porcentaje,
-          extracted.irpf_cantidad, extracted.total, extracted.moneda, extracted.tipo
-        );
+      validateFacturaFields(body);
+    } catch (err) {
+      return fail(res, err.message, 400);
+    }
+
+    let factura;
+    try {
+      factura = db.transaction(() => {
+        const newRow = db
+          .prepare(
+            `INSERT INTO facturas
+               (user_id, numero, fecha, emisor, receptor, concepto,
+                base_imponible, iva_porcentaje, iva_cantidad,
+                irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             RETURNING *`
+          )
+          .get(
+            req.user.id, body.numero, body.fecha, body.emisor,
+            body.receptor, body.concepto, body.base_imponible,
+            body.iva_porcentaje, body.iva_cantidad, body.irpf_porcentaje,
+            body.irpf_cantidad, body.total, body.moneda, body.tipo
+          );
+        db.prepare('DELETE FROM facturas_draft WHERE id = ?').run(id);
+        return newRow;
+      })();
     } catch (dbErr) {
       if (dbErr.message.includes('UNIQUE constraint failed')) {
         return fail(res, 'Invoice number already exists for this account', 409);
@@ -64,13 +152,31 @@ router.post('/upload', multerUpload, async (req, res, next) => {
       throw dbErr;
     }
 
-    const { user_id: _uid, updated_at: _upd, ...factura } = row;
-    factura.created_at = factura.created_at.replace(' ', 'T') + '.000Z';
-    return ok(res, factura, 201);
+    const { user_id: _uid, updated_at: _upd, summary: _sum, ...cleanRow } = factura;
+    cleanRow.created_at = cleanRow.created_at.replace(' ', 'T') + '.000Z';
+    return ok(res, cleanRow, 201);
   } catch (err) {
     next(err);
-  } finally {
-    fs.unlink(filePath, () => {});
+  }
+});
+
+// DELETE /api/facturas/drafts/:id
+// Rejects (permanently deletes) a draft. Scoped to the authenticated user.
+// 200 → { success: true, data: { id } }
+router.delete('/drafts/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const result = db
+      .prepare('DELETE FROM facturas_draft WHERE id = ? AND user_id = ?')
+      .run(id, req.user.id);
+
+    if (result.changes === 0) return fail(res, 'Not found', 404);
+    return ok(res, { id });
+  } catch (err) {
+    next(err);
   }
 });
 
