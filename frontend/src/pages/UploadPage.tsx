@@ -9,14 +9,14 @@ import type { DraftFactura, Factura } from '../types';
 type Status = 'idle' | 'extracting' | 'review' | 'saving' | 'success' | 'error';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-const PHASE2_PENDING_MSG = 'Validación manual aún no disponible (pendiente backend Fase 2).';
+const PHASE2_PENDING_MSG = 'Manual validation not yet available (pending Phase 2 backend).';
 
 function validateFile(file: File): string | null {
   if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
-    return 'El archivo debe ser un PDF.';
+    return 'File must be a PDF.';
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return 'El archivo supera el límite de 10 MB.';
+    return 'File exceeds the 10 MB limit.';
   }
   return null;
 }
@@ -54,11 +54,11 @@ export function UploadPage() {
           setResult(factura);
           setStatus('success');
         } catch (uploadErr) {
-          setError(uploadErr instanceof Error ? uploadErr.message : 'Error al procesar la factura');
+          setError(uploadErr instanceof Error ? uploadErr.message : 'Error processing the invoice');
           setStatus('error');
         }
       } else {
-        setError(err instanceof Error ? err.message : 'Error al extraer la factura');
+        setError(err instanceof Error ? err.message : 'Error extracting the invoice');
         setStatus('error');
       }
     }
@@ -72,7 +72,7 @@ export function UploadPage() {
       setDraft(null);
       setStatus('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al guardar la factura');
+      setError(err instanceof Error ? err.message : 'Error saving the invoice');
       setStatus('error');
     }
   };
@@ -84,9 +84,9 @@ export function UploadPage() {
   };
 
   const statusLabel: Partial<Record<Status, string>> = {
-    extracting: 'Extrayendo datos…',
-    saving: 'Guardando…',
-    success: 'Guardado correctamente',
+    extracting: 'Extracting data…',
+    saving: 'Saving…',
+    success: 'Saved successfully',
   };
 
   const isDropZoneDisabled = status === 'extracting' || status === 'review' || status === 'saving';
@@ -94,9 +94,9 @@ export function UploadPage() {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-xl font-semibold text-bn-body mb-1">Subir factura</h2>
+        <h2 className="text-xl font-semibold text-bn-body mb-1">Upload Invoice</h2>
         <p className="text-sm text-bn-muted mb-6">
-          Sube una factura en PDF para extraer sus datos automáticamente.
+          Upload a PDF invoice to automatically extract its data.
         </p>
 
         <DropZone onFile={handleFile} disabled={isDropZoneDisabled} />

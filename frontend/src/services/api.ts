@@ -173,7 +173,7 @@ export const api = {
     }
     // TODO(phase-2-backend): wire to a draft-extraction endpoint once the
     // contract addendum is approved and Jorge ships the endpoint.
-    throw new Error('Validación manual aún no disponible (pendiente backend Fase 2).');
+    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
   },
 
   async confirmFactura(draft: DraftFactura): Promise<Factura> {
@@ -186,6 +186,6 @@ export const api = {
       };
     }
     // TODO(phase-2-backend): wire to the confirm endpoint once available.
-    throw new Error('Validación manual aún no disponible (pendiente backend Fase 2).');
+    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
   },
 };

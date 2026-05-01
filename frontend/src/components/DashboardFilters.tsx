@@ -13,17 +13,17 @@ interface DashboardFiltersProps {
 }
 
 const PERIODO_LABELS: Record<PeriodoOption, string> = {
-  todos: 'Todos los periodos',
-  mes: 'Este mes',
-  trimestre: 'Trimestre actual',
-  anio: 'Este año',
-  anio12: 'Últimos 12 meses',
+  todos: 'All periods',
+  mes: 'This month',
+  trimestre: 'Current quarter',
+  anio: 'This year',
+  anio12: 'Last 12 months',
 };
 
 const TIPO_LABELS: Record<TipoOption, string> = {
-  todos: 'Todos',
-  ingreso: 'Ingresos',
-  gasto: 'Gastos',
+  todos: 'All',
+  ingreso: 'Income',
+  gasto: 'Expenses',
 };
 
 const selectClass =
@@ -52,7 +52,7 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
   return (
     <div className="bg-bn-card border border-bn-hairline rounded-xl px-4 py-3 flex flex-wrap items-center gap-3 mb-6">
       <span className="text-xs font-semibold text-bn-muted uppercase tracking-wide shrink-0">
-        Filtros
+        Filters
       </span>
 
       <select
@@ -88,7 +88,7 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
         onChange={(e) => update({ cliente: e.target.value || null })}
         className={`${selectClass} ${clienteDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
       >
-        <option value="">Todos los clientes</option>
+        <option value="">All clients</option>
         {clientes.map((c) => (
           <option key={c} value={c}>
             {c}
@@ -101,7 +101,7 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
           onClick={() => setSearchParams({}, { replace: true })}
           className="text-xs font-medium text-bn-yellow hover:text-bn-yellow-hover transition-colors ml-auto"
         >
-          Limpiar filtros
+          Clear filters
         </button>
       )}
     </div>

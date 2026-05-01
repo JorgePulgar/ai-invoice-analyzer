@@ -38,14 +38,14 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
 
   function validate(): FormErrors {
     const e: FormErrors = {};
-    if (!draft.numero.trim()) e.numero = 'Requerido';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.fecha)) e.fecha = 'Formato AAAA-MM-DD';
-    if (!draft.emisor.trim()) e.emisor = 'Requerido';
-    if (!draft.receptor.trim()) e.receptor = 'Requerido';
-    if (draft.base_imponible < 0) e.base_imponible = 'No puede ser negativo';
-    if (draft.total < 0) e.total = 'No puede ser negativo';
+    if (!draft.numero.trim()) e.numero = 'Required';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.fecha)) e.fecha = 'Format YYYY-MM-DD';
+    if (!draft.emisor.trim()) e.emisor = 'Required';
+    if (!draft.receptor.trim()) e.receptor = 'Required';
+    if (draft.base_imponible < 0) e.base_imponible = 'Cannot be negative';
+    if (draft.total < 0) e.total = 'Cannot be negative';
     if (draft.irpf_porcentaje < 0 || draft.irpf_cantidad < 0)
-      e.irpf = 'El IRPF debe ser ≥ 0';
+      e.irpf = 'Withholding tax must be ≥ 0';
     return e;
   }
 
@@ -68,15 +68,15 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
     <form onSubmit={handleSubmit} className="mt-6 bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
       <div className="px-6 py-4 border-b border-bn-hairline flex items-center justify-between">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
-          Revisar datos extraídos
+          Review extracted data
         </h3>
-        <span className="text-xs text-bn-muted">Corrige cualquier campo antes de guardar</span>
+        <span className="text-xs text-bn-muted">Correct any field before saving</span>
       </div>
 
       <div className="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Numero */}
+        {/* Number */}
         <div>
-          <label className={labelClass}>Número *</label>
+          <label className={labelClass}>Number *</label>
           <input
             type="text"
             value={draft.numero}
@@ -86,9 +86,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.numero && <p className="text-xs text-bn-down mt-1">{errors.numero}</p>}
         </div>
 
-        {/* Fecha */}
+        {/* Date */}
         <div>
-          <label className={labelClass}>Fecha *</label>
+          <label className={labelClass}>Date *</label>
           <input
             type="date"
             value={draft.fecha}
@@ -98,9 +98,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.fecha && <p className="text-xs text-bn-down mt-1">{errors.fecha}</p>}
         </div>
 
-        {/* Emisor */}
+        {/* Issuer */}
         <div>
-          <label className={labelClass}>Emisor *</label>
+          <label className={labelClass}>Issuer *</label>
           <input
             type="text"
             value={draft.emisor}
@@ -110,9 +110,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.emisor && <p className="text-xs text-bn-down mt-1">{errors.emisor}</p>}
         </div>
 
-        {/* Receptor */}
+        {/* Recipient */}
         <div>
-          <label className={labelClass}>Receptor *</label>
+          <label className={labelClass}>Recipient *</label>
           <input
             type="text"
             value={draft.receptor}
@@ -122,9 +122,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.receptor && <p className="text-xs text-bn-down mt-1">{errors.receptor}</p>}
         </div>
 
-        {/* Concepto */}
+        {/* Description */}
         <div className="sm:col-span-2">
-          <label className={labelClass}>Concepto</label>
+          <label className={labelClass}>Description</label>
           <input
             type="text"
             value={draft.concepto ?? ''}
@@ -133,9 +133,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           />
         </div>
 
-        {/* Base imponible */}
+        {/* Tax base */}
         <div>
-          <label className={labelClass}>Base imponible (€)</label>
+          <label className={labelClass}>Tax Base (€)</label>
           <input
             type="number"
             step="0.01"
@@ -149,9 +149,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           )}
         </div>
 
-        {/* IVA % */}
+        {/* VAT % */}
         <div>
-          <label className={labelClass}>IVA %</label>
+          <label className={labelClass}>VAT %</label>
           <input
             type="number"
             step="1"
@@ -162,9 +162,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           />
         </div>
 
-        {/* IVA cantidad */}
+        {/* VAT amount */}
         <div>
-          <label className={labelClass}>IVA (€)</label>
+          <label className={labelClass}>VAT (€)</label>
           <input
             type="number"
             step="0.01"
@@ -175,9 +175,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           />
         </div>
 
-        {/* IRPF % */}
+        {/* WHT % */}
         <div>
-          <label className={labelClass}>IRPF %</label>
+          <label className={labelClass}>Withholding Tax %</label>
           <input
             type="number"
             step="1"
@@ -189,9 +189,9 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.irpf && <p className="text-xs text-bn-down mt-1">{errors.irpf}</p>}
         </div>
 
-        {/* IRPF cantidad */}
+        {/* WHT amount */}
         <div>
-          <label className={labelClass}>IRPF (€)</label>
+          <label className={labelClass}>Withholding Tax (€)</label>
           <input
             type="number"
             step="0.01"
@@ -216,14 +216,14 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           {errors.total && <p className="text-xs text-bn-down mt-1">{errors.total}</p>}
           {totalMismatch && !errors.total && (
             <p className="text-xs text-bn-yellow mt-1">
-              El total no cuadra: revisa IVA/IRPF
+              Total does not match: review VAT / withholding tax
             </p>
           )}
         </div>
 
-        {/* Moneda */}
+        {/* Currency */}
         <div>
-          <label className={labelClass}>Moneda</label>
+          <label className={labelClass}>Currency</label>
           <select
             value={draft.moneda}
             onChange={(e) => set('moneda', e.target.value)}
@@ -235,16 +235,16 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           </select>
         </div>
 
-        {/* Tipo */}
+        {/* Type */}
         <div>
-          <label className={labelClass}>Tipo</label>
+          <label className={labelClass}>Type</label>
           <select
             value={draft.tipo}
             onChange={(e) => set('tipo', e.target.value as Tipo)}
             className={inputClass}
           >
-            <option value="ingreso">Ingreso</option>
-            <option value="gasto">Gasto</option>
+            <option value="ingreso">Income</option>
+            <option value="gasto">Expense</option>
           </select>
         </div>
       </div>
@@ -256,14 +256,14 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
           disabled={submitting}
           className="text-sm font-medium text-bn-muted-strong hover:text-bn-body transition-colors disabled:opacity-50"
         >
-          Descartar
+          Discard
         </button>
         <button
           type="submit"
           disabled={submitting}
           className="text-sm font-semibold bg-bn-yellow text-bn-ink px-5 py-2 rounded hover:bg-bn-yellow-hover transition-colors disabled:bg-bn-yellow-dim disabled:text-bn-muted disabled:cursor-not-allowed"
         >
-          {submitting ? 'Guardando…' : 'Confirmar y guardar'}
+          {submitting ? 'Saving…' : 'Confirm and save'}
         </button>
       </div>
     </form>

@@ -53,7 +53,7 @@ export function DashboardPage() {
         setAiSummary(ai);
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Error al cargar datos');
+        setError(err instanceof Error ? err.message : 'Error loading data');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -64,7 +64,7 @@ export function DashboardPage() {
       const result = await api.listFacturas();
       setFacturasOriginal(result.facturas);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar factura');
+      setError(err instanceof Error ? err.message : 'Error deleting invoice');
     }
   };
 
@@ -72,7 +72,7 @@ export function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-bn-muted">Cargando…</p>
+          <p className="text-bn-muted">Loading…</p>
         </div>
       </Layout>
     );
@@ -101,14 +101,14 @@ export function DashboardPage() {
 
   const kpis = summary
     ? [
-        { label: 'Ingresos totales', value: formatCurrency(summary.ingresos_totales), tone: 'up' as const },
-        { label: 'Gastos totales', value: formatCurrency(summary.gastos_totales), tone: 'down' as const },
+        { label: 'Total Income', value: formatCurrency(summary.ingresos_totales), tone: 'up' as const },
+        { label: 'Total Expenses', value: formatCurrency(summary.gastos_totales), tone: 'down' as const },
         {
-          label: 'Beneficio neto',
+          label: 'Net Profit',
           value: formatCurrency(summary.beneficio_neto),
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
         },
-        { label: 'IVA a pagar', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
+        { label: 'VAT Due', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
       ]
     : [];
 
@@ -125,7 +125,7 @@ export function DashboardPage() {
 
       {filteredFacturas.length === 0 && filtersActive ? (
         <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
-          <p className="text-bn-muted">Sin facturas para los filtros seleccionados.</p>
+          <p className="text-bn-muted">No invoices match the selected filters.</p>
         </div>
       ) : (
         <>
