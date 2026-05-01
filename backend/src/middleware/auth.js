@@ -1,10 +1,19 @@
 const jwt = require('jsonwebtoken');
+const { fail } = require('../utils/response');
 
-// Verifies the JWT from the `Authorization: Bearer <token>` header.
-// Sets `req.user = { id, email }` when valid.
 function authenticate(req, res, next) {
-  // TODO: implement
-  return res.status(501).json({ success: false, error: 'Not implemented' });
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return fail(res, 'Unauthorized', 401);
+  }
+  const token = header.slice(7);
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = { id: payload.id, email: payload.email };
+    next();
+  } catch {
+    return fail(res, 'Unauthorized', 401);
+  }
 }
 
 module.exports = { authenticate };

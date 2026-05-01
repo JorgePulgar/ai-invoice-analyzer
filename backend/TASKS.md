@@ -6,17 +6,17 @@ Work queue for the backend developer. Follow the per-task and per-block flows fr
 
 ### Block 1.1 — Authentication
 
-- [ ] Implement `POST /api/auth/register`
+- [x] Implement `POST /api/auth/register`
   - File: `src/routes/auth.js`
   - Validate `email` (basic regex) and `password` (≥ 8 chars). Return 400 on validation errors.
   - Hash with bcrypt using `BCRYPT_ROUNDS`.
   - Insert into `users`. On `UNIQUE` constraint violation, return 409 "Email already registered".
   - On success, return 201 with `{ token, user: { id, email, created_at } }`.
-- [ ] Implement `POST /api/auth/login`
+- [x] Implement `POST /api/auth/login`
   - File: `src/routes/auth.js`
   - Look up user by email. If not found OR password mismatch, return 401 "Invalid credentials" (same message — no user enumeration).
   - On success, return 200 with `{ token, user: { id, email, created_at } }`.
-- [ ] Implement JWT auth middleware
+- [x] Implement JWT auth middleware
   - File: `src/middleware/auth.js`
   - Read `Authorization: Bearer <token>`. Verify with `JWT_SECRET`.
   - On success, set `req.user = { id, email }` and `next()`.
