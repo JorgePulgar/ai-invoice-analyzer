@@ -49,7 +49,7 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
       tooltip: {
         callbacks: {
           label: (ctx: TooltipItem<'bar'>) =>
-            `${ctx.dataset.label ?? ''}: ${formatCurrency(ctx.parsed.y)}`,
+            `${ctx.dataset.label ?? ''}: ${formatCurrency(ctx.parsed.y ?? 0)}`,
         },
       },
     },
