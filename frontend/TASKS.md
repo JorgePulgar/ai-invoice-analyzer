@@ -109,14 +109,151 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ---
 
-## Phase 2 — Nice-to-have (high level)
+## Phase 2
 
-Listed without task-level detail; refined when the phase starts.
+### Block 2.1 — Enhanced dashboard KPIs & charts
 
-- AI summary section on dashboard (consumes new endpoint).
-- Manual validation form between extraction and persistence.
-- Filters on dashboard (period, client, type) — likely a `<DashboardFilters>` component + URL state.
-- Expense vs income visual differentiation (badge/colour) in tables and chart.
+Pre-requisite: Phase 1 merged to `main`. No backend changes required — all data is already available in existing endpoints.
+
+- [ ] Expand KPI row in `DashboardPage`
+  - Add cards for `irpf_retenido`, `ticket_medio`, `num_facturas`, `num_clientes` (all from `/api/analytics/summary`).
+  - Add a period badge above the KPI row: `Analizando: {periodo.desde} → {periodo.hasta}`. Style as a small muted chip.
+- [ ] Add month-over-month trend indicators to KPI cards
+  - Update `KpiCard` props: `{ label, value, trend?: { pct: number; direction: 'up' | 'down' | 'neutral' } }`.
+  - Compute trends client-side from the monthly array (current month vs previous month). Pass `neutral` when no previous month exists.
+  - Render `↑ +X%` / `↓ -X%` below the value in green/red/grey respectively.
+- [ ] Upgrade `MonthlyChart` to combo chart
+  - Add a third dataset: net profit line (`ingresos - gastos`). Use `type: 'line'` on the same chart instance.
+  - Keep existing income/expense bar datasets unchanged.
+- [ ] Add `CashFlowChart` component
+  - File: `src/components/CashFlowChart.tsx`.
+  - Area chart of `ingresos - gastos` per month, computed client-side from the monthly array.
+  - Positive area in green, negative in red (use Chart.js segment colouring or a single dataset with conditional fill).
+- [ ] Add `ProfitMarginChart` component
+  - File: `src/components/ProfitMarginChart.tsx`.
+  - Line chart of `((ingresos - gastos) / ingresos) * 100` per month. Skip months where `ingresos === 0` (render gap, not zero).
+- [ ] Add `RevenueDonutChart` component
+  - File: `src/components/RevenueDonutChart.tsx`.
+  - Doughnut chart from `/api/analytics/clients` (`cliente`, `facturado`). Fetch in the existing `Promise.all` in `DashboardPage`.
+- [ ] Add `VatChart` component
+  - File: `src/components/VatChart.tsx`.
+  - Stacked bar chart of `iva_repercutido`, `iva_soportado`, `iva_a_pagar` per quarter from `/api/analytics/vat`.
+  - Keep `VatTable` alongside it or replace it — your choice, but at least the chart must be present.
+- [ ] Add IRPF summary widget
+  - Simple block in the tax section: "IRPF retenido por clientes: €X". Uses `irpf_retenido` from summary.
+- [ ] Smoke check
+  - File: `scripts/smoke/dashboard-enhanced.md`. Walk through each new card, chart, and widget with real backend data. Capture outcomes.
+
+**Block 2.1 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.2 — Filters & invoice search
+
+Pre-requisite: Backend Block 2.1 complete (`desde`/`hasta` params and factura filters available).
+
+- [ ] Create `DashboardFilters` component
+  - File: `src/components/DashboardFilters.tsx`.
+  - Props: `{ value: DateRange; onChange: (r: DateRange) => void }` where `DateRange = { desde: string; hasta: string }`.
+  - Preset buttons: "Últimos 30 días", "Últimos 3 meses", "Este año", "Año anterior", "Personalizado".
+  - Custom range: two `<input type="date">` fields, shown only when "Personalizado" is selected.
+  - Add type to `src/types/index.ts`.
+- [ ] Wire `DashboardFilters` into `DashboardPage`
+  - Lift filter state to `DashboardPage`. On change, re-fetch all analytics endpoints passing `desde`/`hasta`.
+  - Do not re-fetch on every keystroke for custom range — re-fetch on blur or an explicit "Aplicar" button.
+- [ ] Add search & filter bar to `FacturasTable`
+  - Props: no change to `FacturasTable` signature — filter state lives in `DashboardPage` and a filtered list is passed down.
+  - Add a filter row above the table: text input (searches `emisor` + `receptor`), type toggle (`Todos | Ingresos | Gastos`), minimum amount input.
+  - All filtering is client-side on the already-fetched `facturas` list. No additional API call.
+- [ ] Smoke check
+  - File: `scripts/smoke/filters.md`. Verify presets update all charts, custom range applies, table search narrows rows, clearing filters restores full view.
+
+**Block 2.2 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.3 — Automatic indicators panel
+
+Pre-requisite: Block 2.1 complete (all dashboard data available).
+
+- [ ] Create `IndicadoresPanel` component
+  - File: `src/components/IndicadoresPanel.tsx`.
+  - Receives `{ summary, monthly, clients }` as props. Computes 3–5 rule-based insights client-side. Examples:
+    - "El cliente principal representa el X% de los ingresos totales."
+    - "Los gastos subieron un X% respecto al mes anterior."
+    - "Valor medio de factura este mes: €X."
+    - "Llevas N facturas sin gastos registrados." (if `gastos_totales === 0`)
+  - Label the section **"Indicadores automáticos"** — not "IA" or "AI".
+  - Only render insights for which the underlying data is non-zero/non-null. Never show divide-by-zero results.
+- [ ] Add period-over-period KPI comparison
+  - Extend the trend computation from Block 2.1: compare the sum of the current filter period against the same-length previous period, both derived from the monthly array.
+  - Update `KpiCard` to also show an absolute delta (`+€X`) alongside the percentage.
+- [ ] Smoke check
+  - File: `scripts/smoke/indicators.md`. Verify all rendered insight strings are non-empty and percentages are finite numbers. Verify no insight renders when the relevant metric is zero.
+
+**Block 2.3 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.4 — Top Suppliers section
+
+Pre-requisite: Backend Block 2.1 complete (`GET /api/analytics/suppliers` available).
+
+- [ ] Add `SupplierEntry` type and `getSuppliers` method
+  - File: `src/types/index.ts` → `interface SupplierEntry { proveedor: string; gastado: number; num_facturas: number }`.
+  - File: `src/services/api.ts` → `getSuppliers()` method (real + mock paths). Add mock data to `public/mock/data.json`.
+- [ ] Create `TopSuppliersList` component
+  - File: `src/components/TopSuppliersList.tsx`.
+  - Mirrors `TopClientsList`. Renders "Proveedor — €X (N facturas)" per row. Use `formatCurrency`.
+- [ ] Wire into `DashboardPage`
+  - Add `getSuppliers()` to the `Promise.all` fetch. Render `<TopSuppliersList>` alongside `<TopClientsList>`.
+- [ ] Smoke check
+  - File: `scripts/smoke/suppliers-ui.md`. Verify list renders, amounts match backend response.
+
+**Block 2.4 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 2.5 — Upload revamp: multi-file, validation table & AI summary
+
+Pre-requisite: Backend Blocks 2.2 and 2.3 complete.
+
+> **Design decision:** every upload now goes through a mandatory human-validation step (backend Block 2.3 enforces this). The upload page is redesigned around that flow: multiple files can be dropped at once, each one is processed sequentially and shown as an editable validation table, and only after the user confirms does the data get saved to the database. There is no "Modo borrador" toggle — the draft stage is always the path.
+
+- [ ] Extend `DropZone` to accept multiple files
+  - Change props: `onFiles: (files: File[]) => void` (replace `onFile`). Add `multiple` attribute to the hidden `<input>` and handle multi-file drops in `onDrop`.
+  - Client-side validation (PDF mime + `.pdf` extension, ≤ 10 MB) runs per file. Invalid files are rejected inline with per-file error messages; valid ones proceed.
+- [ ] Build `FacturaValidationTable` component
+  - File: `src/components/FacturaValidationTable.tsx`.
+  - Props: `{ draft: FacturaDraft; onConfirm: (id: number, fields: FacturaEditableFields) => Promise<void>; onReject: (id: number) => Promise<void> }`.
+  - Renders a two-column table (field label | editable input) for every factura field: `numero`, `fecha`, `emisor`, `receptor`, `concepto`, `base_imponible`, `iva_porcentaje`, `iva_cantidad`, `irpf_porcentaje`, `irpf_cantidad`, `total`, `moneda`, `tipo`.
+  - Inputs are pre-filled from the draft. All inputs are editable. `tipo` is a `<select>` with options `ingreso / gasto`. Numeric fields use `type="number"`.
+  - "Confirmar" button calls `onConfirm(id, editedFields)`. "Rechazar" button calls `onReject(id)`. Both buttons disable during the async call.
+  - Add `FacturaDraft` and `FacturaEditableFields` types to `src/types/index.ts`.
+- [ ] Wire the upload queue in `UploadPage`
+  - State: `queue: Array<{ file: File; status: 'pending' | 'uploading' | 'review' | 'confirmed' | 'rejected' | 'error'; draft?: FacturaDraft; error?: string }>`.
+  - On files received from `DropZone`: add each to the queue as `pending`, then process them **sequentially** (start the next upload only after the previous one reaches `review` or `error`).
+  - While uploading a file: set its status to `uploading`, call `api.uploadFactura(file)` (which now returns a draft). On success set status to `review` and store the draft. On error set status to `error` and store the message.
+  - Render one `FacturaValidationTable` per file in `review` state, stacked vertically.
+  - `onConfirm`: call `api.confirmDraft(id, fields)`. On success set status to `confirmed`. On error show the error inside the table row.
+  - `onReject`: call `api.rejectDraft(id)`. On success set status to `rejected`.
+- [ ] Show AI summary inside each validation table
+  - After a draft reaches `review` status, call `api.getFacturaSummary(draft_id)` in the background.
+  - Add `getFacturaSummary(id: number): Promise<{ summary: string }>` to `api.ts`.
+  - Display the returned narrative as a muted info block at the top of the `FacturaValidationTable`. Show a spinner while loading; do not block the editable fields.
+- [ ] Add "Volver al panel" button
+  - Show a `<Link to="/dashboard">` styled as a secondary button at the top of `UploadPage` at all times, and also as a primary CTA once all queued files have reached `confirmed` or `rejected` status.
+- [ ] Update `api.ts`
+  - `uploadFactura(file)` now returns `{ draft: FacturaDraft }` (backend Block 2.3 changed the response).
+  - Add `confirmDraft(id, fields: FacturaEditableFields): Promise<Factura>`.
+  - Add `rejectDraft(id): Promise<{ id: number }>`.
+  - Add `getDrafts(): Promise<{ drafts: FacturaDraft[] }>`.
+  - Add mock paths for all new methods in `public/mock/data.json`.
+- [ ] Smoke check
+  - File: `scripts/smoke/upload-revamp.md`.
+  - Drop 2 PDFs → both appear in queue → first shows validation table after upload → edit one field → confirm → status changes to confirmed → second file uploads → confirm without edits → both confirmed → "Volver al panel" CTA appears. Drop a non-PDF → per-file error shown, valid file proceeds. Reject one → status shows rejected. Navigate to `/dashboard` → both confirmed facturas appear in the table.
+
+**Block 2.5 closes with**: `git push origin dev-frontend`. **End of Phase 2.** Open a PR from `dev-frontend` to `main` summarising the phase.
 
 ## Phase 3 — Stretch (high level)
 

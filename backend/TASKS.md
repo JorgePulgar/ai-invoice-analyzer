@@ -107,15 +107,107 @@ Pre-requisite: Block 1.3 complete.
 
 ---
 
-## Phase 2 — Nice-to-have (high level)
+## Phase 2
 
-Listed without task-level detail; refined when the phase starts.
+### Block 2.1 — Suppliers endpoint & filter query params
 
-- AI summary endpoint: generate a short narrative (≤ 3 sentences) of an upload's financial impact.
-- Manual validation flow: persist extracted data to a "draft" table; user confirms/edits before promoting to `facturas`.
-- Filters on `/api/analytics/*` and `/api/facturas`: query params for period, client, type.
-- Multi-page PDF support in the extractor (render pages to images server-side, send all pages).
-- Rate limiting on `/api/facturas/upload` (Azure cost protection).
+Pre-requisite: Phase 1 merged to `main`.
+
+- [ ] Update `docs/api-contract.md` with new endpoints and query params
+  - Add `GET /api/analytics/suppliers` shape (mirrors clients, using `emisor` / `gasto`).
+  - Document `desde` / `hasta` query params on all analytics endpoints.
+  - Document `tipo`, `cliente`, `proveedor`, `importe_min` params on `GET /api/facturas`.
+  - **Coordinate with the frontend developer before touching the contract.**
+- [ ] Implement `getTopSuppliers` in `src/services/metrics.js`
+  - Expenses only (`tipo = 'gasto'`). Group by `emisor`. Order by `SUM(total) DESC`. Default limit 10.
+  - Accepts optional `{ desde, hasta }` date range; apply to all subsequent metrics functions too.
+- [ ] Wire `GET /api/analytics/suppliers`
+  - File: `src/routes/analytics.js`. Calls `getTopSuppliers`, wraps in `ok(res, ...)`.
+  - Response shape: `{ suppliers: [{ proveedor, gastado, num_facturas }] }`.
+- [ ] Add `desde` / `hasta` query params to all analytics routes
+  - Routes: `summary`, `monthly`, `clients`, `suppliers`, `vat`.
+  - Validate format (`YYYY-MM-DD`); return 400 on bad format. Ignore if absent (return full dataset).
+  - Pass the validated range down to every `metrics.js` function.
+  - Monthly still fills missing months with `0.00` within the requested range (12-month max).
+- [ ] Add filter params to `GET /api/facturas`
+  - Params: `tipo` (`ingreso|gasto`), `cliente` (substring on `receptor`), `proveedor` (substring on `emisor`), `importe_min` (number).
+  - All optional and combinable. Use `LIKE '%?%'` with prepared statements; never concatenate.
+- [ ] Smoke test for suppliers & filters
+  - File: `scripts/smoke/suppliers-filters.js`.
+  - Seed diverse facturas (income + expenses, multiple clients/suppliers). Call suppliers endpoint; assert order and totals. Call analytics with `desde`/`hasta`; assert filtered totals differ from unfiltered. Call filtered `GET /api/facturas`; assert row counts.
+
+**Block 2.1 closes with**: `git push origin dev-backend`.
+
+---
+
+### Block 2.2 — AI summary endpoint
+
+Pre-requisite: Block 2.1 complete.
+
+- [ ] Add `summary` column to `facturas` table
+  - File: `src/db/schema.sql`. Add `summary TEXT` (nullable) to the `facturas` table definition.
+  - Migration note: column is nullable, so existing rows are unaffected. Document in `LESSONS.md` if `better-sqlite3` requires any migration step.
+- [ ] Implement `POST /api/facturas/:id/summary`
+  - File: `src/routes/facturas.js`.
+  - Fetch factura by `id` and `user_id`; return 404 if not found.
+  - If `summary` column is already populated, return it directly (cache hit — no Azure call).
+  - Otherwise, call Azure AI Foundry (GPT-4o) with a prompt requesting a financial narrative ≤ 3 sentences about the invoice's fiscal impact. Store the result in the `summary` column.
+  - Response: `{ summary: "..." }` wrapped in the standard envelope.
+- [ ] Smoke test for AI summary
+  - File: `scripts/smoke/summary.js`.
+  - Upload a factura, call the summary endpoint, assert a non-empty string. Call again; assert the response is identical (cache hit, no second Azure call — verify via log/timing).
+
+**Block 2.2 closes with**: `git push origin dev-backend`.
+
+---
+
+### Block 2.3 — Validation flow (mandatory draft stage)
+
+Pre-requisite: Block 2.1 complete.
+
+> **Design decision:** every upload now goes through a mandatory human-validation step before being committed to `facturas`. The upload endpoint no longer writes directly to `facturas`; it always writes to `facturas_draft` and returns the draft for the user to review and edit.
+
+- [ ] Update `docs/api-contract.md` to reflect the new upload response and draft endpoints
+  - `POST /api/facturas/upload` now returns 201 with the **draft** row (same shape as before but scoped to `facturas_draft`, includes `draft_id`). Coordinate with the frontend developer before merging.
+- [ ] Add `facturas_draft` table to schema
+  - File: `src/db/schema.sql`. Same columns as `facturas` plus `status TEXT NOT NULL DEFAULT 'pending'` (`pending | confirmed | rejected`). No `UNIQUE` constraint on `numero` (draft is not committed yet).
+- [ ] Change `POST /api/facturas/upload` to always write to `facturas_draft`
+  - Remove any direct insert into `facturas` from this route.
+  - On extraction success, insert into `facturas_draft`. Return 201 with `{ draft: <draft row> }`.
+  - PDF deletion in `finally` still applies on every path (success, extraction error, DB error).
+  - Errors: extractor validation → 400; Azure failure → 502; multer rejections → 413/415.
+- [ ] Implement `GET /api/facturas/drafts`
+  - Return all `status = 'pending'` drafts for `req.user.id`, ordered by `id DESC`.
+  - Response: `{ drafts: [...] }`.
+- [ ] Implement `POST /api/facturas/drafts/:id/confirm`
+  - Body: all factura fields (user may have edited any of them in the UI). Re-validate the submitted values using the same rules the extractor applies (field presence, date format, `tipo`, IRPF sign, total tolerance).
+  - On validation failure, return 400 with a descriptive message — do not commit.
+  - On success, insert into `facturas`, delete from `facturas_draft`. On `UNIQUE(user_id, numero)` violation, return 409. Return 201 with the promoted factura row.
+- [ ] Implement `DELETE /api/facturas/drafts/:id`
+  - Delete the draft (scoped to `req.user.id`). Return 200 with `{ id }`, or 404 if not found / wrong user.
+- [ ] Smoke test for validation flow
+  - File: `scripts/smoke/drafts.js`.
+  - Upload a PDF → assert response is a draft (not a final factura). GET drafts → assert it appears. Confirm with the original fields → assert promoted factura exists in `facturas`. Upload again → confirm with an edited field (change `numero`) → assert the saved row reflects the edit. Upload a third → confirm with an invalid `total` → assert 400. Reject a draft → assert 200 and GET drafts returns empty.
+
+**Block 2.3 closes with**: `git push origin dev-backend`.
+
+---
+
+### Block 2.4 — Multi-page PDF & rate limiting
+
+Pre-requisite: Block 2.1 complete.
+
+- [ ] Multi-page PDF support in extractor
+  - Add `pdf2pic` (or equivalent) to convert each PDF page to an image server-side.
+  - Send all page images as separate `image_url` content parts in a single GPT-4o message.
+  - Remove the single-page rejection added in Phase 1. Update `LESSONS.md` with any gotcha found during implementation.
+- [ ] Rate limiting on `POST /api/facturas/upload`
+  - Use `express-rate-limit` with a per-user key (`req.user.id`).
+  - Limit: 10 requests / 60 seconds (adjust via env var `UPLOAD_RATE_LIMIT`). Return 429 on exceeded limit.
+- [ ] Smoke test for multi-page & rate limit
+  - File: `scripts/smoke/multipage-ratelimit.js`. Fixture: a 2-page PDF under `scripts/smoke/fixtures/`. Assert extraction returns data. Assert 11th upload within 60 s returns 429.
+
+**Block 2.4 closes with**: `git push origin dev-backend`. **End of Phase 2.** Open a PR from `dev-backend` to `main` summarising the phase.
 
 ## Phase 3 — Stretch (high level)
 
