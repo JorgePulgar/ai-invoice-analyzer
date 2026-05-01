@@ -12,20 +12,28 @@ export function Layout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="bg-white border-b border-slate-200">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-lg font-semibold">Invoice Insights</h1>
-          <nav className="flex gap-4 items-center">
-            <Link to="/dashboard" className="text-slate-700 hover:text-blue-600">
+    <div className="min-h-screen bg-bn-canvas text-bn-body">
+      <header className="bg-bn-canvas border-b border-bn-hairline sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+          <span className="text-bn-yellow font-bold text-lg tracking-tight">
+            Invoice Insights
+          </span>
+          <nav className="flex gap-6 items-center">
+            <Link
+              to="/dashboard"
+              className="text-sm font-medium text-bn-muted-strong hover:text-bn-yellow transition-colors"
+            >
               Dashboard
             </Link>
-            <Link to="/upload" className="text-slate-700 hover:text-blue-600">
+            <Link
+              to="/upload"
+              className="text-sm font-medium text-bn-muted-strong hover:text-bn-yellow transition-colors"
+            >
               Subir factura
             </Link>
             <button
               onClick={handleLogout}
-              className="bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 text-sm"
+              className="text-sm font-semibold bg-bn-yellow text-bn-ink px-4 py-1.5 rounded hover:bg-bn-yellow-hover transition-colors"
             >
               Salir
             </button>
