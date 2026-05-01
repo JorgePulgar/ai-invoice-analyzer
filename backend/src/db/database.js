@@ -14,6 +14,11 @@ function getDb() {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 
+  // Apply full schema on every open so new tables are created without a
+  // manual npm run init-db step. All statements use CREATE/INDEX IF NOT EXISTS.
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  db.exec(fs.readFileSync(schemaPath, 'utf-8'));
+
   // Additive column migrations — safe to run on every open because they are
   // wrapped in try/catch. SQLite < 3.37 has no IF NOT EXISTS on ADD COLUMN.
   const additiveMigrations = [
