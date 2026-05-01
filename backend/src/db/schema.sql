@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS facturas (
   total             REAL    NOT NULL,
   moneda            TEXT    NOT NULL DEFAULT 'EUR',
   tipo              TEXT    NOT NULL CHECK (tipo IN ('ingreso', 'gasto')),
+  summary           TEXT,                                      -- AI-generated fiscal narrative; NULL until generated
   created_at        TEXT    NOT NULL DEFAULT (datetime('now')),
   updated_at        TEXT    NOT NULL DEFAULT (datetime('now')),
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,

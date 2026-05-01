@@ -24,3 +24,22 @@ This works for all digitally-generated invoices (which have an embedded text lay
 - Phase 2 scanned-invoice support will need server-side PDF→image rendering (e.g. `pdfjs-dist` + `canvas` or Ghostscript) to produce a proper `data:image/png;base64,...` payload.
 - If the Azure endpoint is upgraded or changed, re-test the image URL approach — it may eventually be supported.
 - `pdf-parse` returns empty text for image-only PDFs; the extractor throws a clear 400 in that case.
+
+---
+
+## SQLite `ALTER TABLE ADD COLUMN` has no `IF NOT EXISTS` (SQLite < 3.37)
+
+**Error seen:**
+```
+SqliteError: duplicate column name: summary
+```
+Thrown when `db.exec('ALTER TABLE facturas ADD COLUMN summary TEXT')` is called against a DB where the column already exists (e.g., after re-running `npm run init-db` or reconnecting to an already-migrated database).
+
+**Root cause:**  
+SQLite versions below 3.37 do not support `ALTER TABLE … ADD COLUMN … IF NOT EXISTS`. `CREATE TABLE IF NOT EXISTS` guards only table creation, not column additions to existing tables.
+
+**Fix applied:**  
+Additive column migrations are wrapped in try/catch. The error is swallowed only for `"duplicate column name"`; any other error is re-thrown. The same migration list lives in both `src/db/init.js` (for explicit `npm run init-db` runs) and `src/db/database.js` (applied automatically on every DB open so a plain `npm start` picks up new columns without a manual init step).
+
+**Watch for next time:**  
+Every new nullable column added to an existing table needs a matching entry in the `additiveMigrations` arrays in **both** `init.js` and `database.js`.

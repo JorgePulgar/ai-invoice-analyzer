@@ -14,6 +14,18 @@ function getDb() {
   db.pragma('journal_mode = WAL');
   db.pragma('foreign_keys = ON');
 
+  // Additive column migrations — safe to run on every open because they are
+  // wrapped in try/catch. SQLite < 3.37 has no IF NOT EXISTS on ADD COLUMN.
+  const additiveMigrations = [
+    'ALTER TABLE facturas ADD COLUMN summary TEXT',
+  ];
+  for (const sql of additiveMigrations) {
+    try { db.exec(sql); } catch (e) {
+      if (!e.message.includes('duplicate column name') &&
+          !e.message.includes('no such table')) throw e;
+    }
+  }
+
   return db;
 }
 
