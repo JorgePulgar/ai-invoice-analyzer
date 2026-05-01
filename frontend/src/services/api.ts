@@ -164,7 +164,7 @@ export const api = {
 
   // --- Phase 2 upload (extract → review → confirm) ---
 
-  async extractFactura(file: File): Promise<DraftFactura> {
+  async extractFactura(_file: File): Promise<DraftFactura> {
     if (USE_MOCK) {
       const m = await loadMock();
       await new Promise((r) => setTimeout(r, 800));

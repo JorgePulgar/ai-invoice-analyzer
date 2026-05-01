@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { Layout } from '../components/Layout';
 import { DropZone } from '../components/DropZone';
 import { TipoBadge } from '../components/TipoBadge';
+import { FacturaForm } from '../components/FacturaForm';
 import { api } from '../services/api';
-import type { Factura } from '../types';
+import type { DraftFactura, Factura } from '../types';
 
-type Status = 'idle' | 'uploading' | 'success' | 'error';
+type Status = 'idle' | 'extracting' | 'review' | 'saving' | 'success' | 'error';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
+const PHASE2_PENDING_MSG = 'Validación manual aún no disponible (pendiente backend Fase 2).';
 
 function validateFile(file: File): string | null {
   if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
@@ -21,6 +23,7 @@ function validateFile(file: File): string | null {
 
 export function UploadPage() {
   const [status, setStatus] = useState<Status>('idle');
+  const [draft, setDraft] = useState<DraftFactura | null>(null);
   const [result, setResult] = useState<Factura | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,30 +32,64 @@ export function UploadPage() {
     if (validationError) {
       setError(validationError);
       setStatus('error');
+      setDraft(null);
       setResult(null);
       return;
     }
 
     setError(null);
+    setDraft(null);
     setResult(null);
-    setStatus('uploading');
 
     try {
-      const factura = await api.uploadFactura(file);
+      setStatus('extracting');
+      const extracted = await api.extractFactura(file);
+      setDraft(extracted);
+      setStatus('review');
+    } catch (err) {
+      if (err instanceof Error && err.message === PHASE2_PENDING_MSG) {
+        // Live backend: fall back to Phase 1 direct-upload flow
+        try {
+          const factura = await api.uploadFactura(file);
+          setResult(factura);
+          setStatus('success');
+        } catch (uploadErr) {
+          setError(uploadErr instanceof Error ? uploadErr.message : 'Error al procesar la factura');
+          setStatus('error');
+        }
+      } else {
+        setError(err instanceof Error ? err.message : 'Error al extraer la factura');
+        setStatus('error');
+      }
+    }
+  };
+
+  const handleConfirm = async (confirmed: DraftFactura) => {
+    setStatus('saving');
+    try {
+      const factura = await api.confirmFactura(confirmed);
       setResult(factura);
+      setDraft(null);
       setStatus('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al procesar la factura');
+      setError(err instanceof Error ? err.message : 'Error al guardar la factura');
       setStatus('error');
     }
   };
 
-  const statusLabel: Record<Status, string | null> = {
-    idle: null,
-    uploading: 'Procesando…',
-    success: 'Subido correctamente',
-    error: null,
+  const handleDiscard = () => {
+    setDraft(null);
+    setError(null);
+    setStatus('idle');
   };
+
+  const statusLabel: Partial<Record<Status, string>> = {
+    extracting: 'Extrayendo datos…',
+    saving: 'Guardando…',
+    success: 'Guardado correctamente',
+  };
+
+  const isDropZoneDisabled = status === 'extracting' || status === 'review' || status === 'saving';
 
   return (
     <Layout>
@@ -62,7 +99,7 @@ export function UploadPage() {
           Sube una factura en PDF para extraer sus datos automáticamente.
         </p>
 
-        <DropZone onFile={handleFile} disabled={status === 'uploading'} />
+        <DropZone onFile={handleFile} disabled={isDropZoneDisabled} />
 
         {/* Status */}
         {statusLabel[status] && (
@@ -76,11 +113,19 @@ export function UploadPage() {
         )}
 
         {/* Error */}
-        {error && (
-          <p className="mt-4 text-sm text-bn-down">{error}</p>
+        {error && <p className="mt-4 text-sm text-bn-down">{error}</p>}
+
+        {/* Review form (Phase 2 mock path) */}
+        {(status === 'review' || status === 'saving') && draft && (
+          <FacturaForm
+            initial={draft}
+            onSubmit={handleConfirm}
+            onCancel={handleDiscard}
+            submitting={status === 'saving'}
+          />
         )}
 
-        {/* Result */}
+        {/* Result (Phase 1 path + Phase 2 after confirm) */}
         {result && (
           <div className="mt-6 bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
             <div className="px-6 py-3 border-b border-bn-hairline flex items-center justify-between">

@@ -130,11 +130,11 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ### Block 2.2 — Dashboard filters (client-side, URL state)
 
-- [ ] Create `src/utils/filters.ts`
+- [x] Create `src/utils/filters.ts`
   - `FilterState` type, `parseFilters`, `applyFilters`, `deriveSummary`, `deriveMonthly`, `deriveClients`, `deriveVat`.
-- [ ] Create `DashboardFilters` component
+- [x] Create `DashboardFilters` component
   - File: `src/components/DashboardFilters.tsx`. Periodo / Tipo / Cliente selects wired to `useSearchParams`.
-- [ ] Wire filters into `DashboardPage`
+- [x] Wire filters into `DashboardPage`
   - Fetch full facturas on mount; derive analytics client-side when filters are non-default. `facturasOriginal` state feeds cliente dropdown.
 
 **Block 2.2 closes with**: `git push origin dev-frontend`.
@@ -143,13 +143,13 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ### Block 2.3 — AI summary section (UI under USE_MOCK)
 
-- [ ] Add `AiSummary` type and mock data
+- [x] Add `AiSummary` type and mock data
   - `src/types/index.ts` + `public/mock/data.json` `aiSummary` field.
-- [ ] Add `api.getAiSummary()` method
+- [x] Add `api.getAiSummary()` method
   - Returns mock under `USE_MOCK`; returns `null` under live backend (no throw, no fetch).
-- [ ] Create `AiSummaryCard` component
+- [x] Create `AiSummaryCard` component
   - File: `src/components/AiSummaryCard.tsx`. Loading skeleton, null → hidden, present → narrative card with yellow left border.
-- [ ] Wire into `DashboardPage` above KPI grid.
+- [x] Wire into `DashboardPage` above KPI grid.
 
 **Block 2.3 closes with**: `git push origin dev-frontend`.
 
@@ -157,11 +157,11 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ### Block 2.4 — Manual validation form (UI under USE_MOCK)
 
-- [ ] Add `DraftFactura` type and extract/confirm api methods
+- [x] Add `DraftFactura` type and extract/confirm api methods
   - `src/types/index.ts`, `src/services/api.ts`. Fallback to Phase 1 upload under live backend.
-- [ ] Create `FacturaForm` component
+- [x] Create `FacturaForm` component
   - File: `src/components/FacturaForm.tsx`. All Factura fields, inline validation, total-mismatch warning chip.
-- [ ] Wire two-step upload flow into `UploadPage`
+- [x] Wire two-step upload flow into `UploadPage`
   - New status states `extracting | review | saving`. Live-backend fallback to direct upload.
 
 **Block 2.4 closes with**: `git push origin dev-frontend`. **End of Phase 2.** Open a PR from `dev-frontend` to `main` summarising the phase.
