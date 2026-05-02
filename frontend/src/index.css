@@ -25,16 +25,28 @@
 }
 
 @media print {
+  /* Force light-theme tokens so cards/backgrounds are white on paper
+     regardless of whether the user has dark mode active */
+  :root,
+  .dark {
+    --bn-canvas:       #FFFFFF;
+    --bn-card:         #FFFFFF;
+    --bn-elevated:     #F8FAFC;
+    --bn-hairline:     #E2E8F0;
+    --bn-body:         #1E293B;
+    --bn-muted:        #64748B;
+    --bn-muted-strong: #475569;
+  }
+
   /* Hide chrome that is irrelevant on paper */
   header,
   [data-print-hide] {
     display: none !important;
   }
 
-  /* White background so ink isn't wasted on the dark theme */
   body {
     background: white !important;
-    color: black !important;
+    color: #1E293B !important;
   }
 
   /* Remove page-level max-width and padding so content fills the page */
@@ -48,8 +60,9 @@
     gap: 0.5rem !important;
   }
 
-  /* Ensure canvas (Chart.js) elements are not clipped */
+  /* Chart.js canvas: prevent clipping and ensure height is respected */
   canvas {
     max-width: 100% !important;
+    height: auto !important;
   }
 }
