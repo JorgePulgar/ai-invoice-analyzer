@@ -22,7 +22,7 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
     labels: data.map((d) => d.mes),
     datasets: [
       {
-        label: 'Ingresos',
+        label: 'Income',
         data: data.map((d) => d.ingresos),
         backgroundColor: 'rgba(14, 203, 129, 0.65)',
         borderColor: '#0ECB81',
@@ -30,7 +30,7 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
         borderRadius: 4,
       },
       {
-        label: 'Gastos',
+        label: 'Expenses',
         data: data.map((d) => d.gastos),
         backgroundColor: 'rgba(246, 70, 93, 0.65)',
         borderColor: '#F6465D',
@@ -74,7 +74,7 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Evolución mensual
+        Monthly Overview
       </h3>
       <Bar data={chartData} options={options} />
     </div>

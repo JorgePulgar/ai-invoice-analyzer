@@ -67,3 +67,10 @@ export interface VatEntry {
   iva_soportado: number;
   iva_a_pagar: number;
 }
+
+export interface AiSummary {
+  narrative: string;
+  generated_at: string;
+}
+
+export type DraftFactura = Omit<Factura, 'id' | 'created_at'>;

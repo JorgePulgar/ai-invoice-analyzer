@@ -9,7 +9,7 @@ export function TopClientsList({ clients }: TopClientsListProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Principales clientes
+        Top Clients
       </h3>
       <ol className="space-y-1">
         {clients.map((client, i) => (
@@ -22,9 +22,12 @@ export function TopClientsList({ clients }: TopClientsListProps) {
               <span className="text-sm text-bn-body truncate">{client.cliente}</span>
             </div>
             <div className="text-right ml-4 shrink-0">
-              <p className="text-sm font-semibold text-bn-yellow">{formatCurrency(client.facturado)}</p>
+              <p className="text-sm font-semibold text-bn-up flex items-center justify-end gap-1">
+                <span className="text-[10px]">▲</span>
+                {formatCurrency(client.facturado)}
+              </p>
               <p className="text-xs text-bn-muted">
-                {client.num_facturas} {client.num_facturas === 1 ? 'factura' : 'facturas'}
+                {client.num_facturas} {client.num_facturas === 1 ? 'invoice' : 'invoices'}
               </p>
             </div>
           </li>

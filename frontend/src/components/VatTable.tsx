@@ -9,15 +9,15 @@ export function VatTable({ vat }: VatTableProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        IVA trimestral
+        Quarterly VAT
       </h3>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-bn-muted uppercase">
-            <th className="text-left pb-3 font-medium">Trimestre</th>
-            <th className="text-right pb-3 font-medium">Repercutido</th>
-            <th className="text-right pb-3 font-medium">Soportado</th>
-            <th className="text-right pb-3 font-medium">A pagar</th>
+            <th className="text-left pb-3 font-medium">Quarter</th>
+            <th className="text-right pb-3 font-medium">Output</th>
+            <th className="text-right pb-3 font-medium">Input</th>
+            <th className="text-right pb-3 font-medium">Due</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-bn-hairline">

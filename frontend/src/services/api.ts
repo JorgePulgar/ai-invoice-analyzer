@@ -6,8 +6,10 @@
 // backend-provided message.
 
 import type {
+  AiSummary,
   AuthResponse,
   ClientEntry,
+  DraftFactura,
   Factura,
   MonthlyEntry,
   Summary,
@@ -25,6 +27,7 @@ interface MockData {
   monthly: MonthlyEntry[];
   clients: ClientEntry[];
   vat: VatEntry[];
+  aiSummary: AiSummary;
 }
 
 let mockCache: MockData | null = null;
@@ -150,5 +153,39 @@ export const api = {
   async getVat(): Promise<VatEntry[]> {
     if (USE_MOCK) return (await loadMock()).vat;
     return request<VatEntry[]>('GET', '/analytics/vat');
+  },
+
+  async getAiSummary(): Promise<AiSummary | null> {
+    if (USE_MOCK) return (await loadMock()).aiSummary;
+    // TODO(phase-2-backend): wire to GET /api/analytics/ai-summary once the
+    // contract addendum is approved and Jorge ships the endpoint.
+    return null;
+  },
+
+  // --- Phase 2 upload (extract → review → confirm) ---
+
+  async extractFactura(_file: File): Promise<DraftFactura> {
+    if (USE_MOCK) {
+      const m = await loadMock();
+      await new Promise((r) => setTimeout(r, 800));
+      const { id: _id, created_at: _ca, ...draft } = m.facturas[0];
+      return draft;
+    }
+    // TODO(phase-2-backend): wire to a draft-extraction endpoint once the
+    // contract addendum is approved and Jorge ships the endpoint.
+    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
+  },
+
+  async confirmFactura(draft: DraftFactura): Promise<Factura> {
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 300));
+      return {
+        ...draft,
+        id: Math.floor(Math.random() * 10000) + 100,
+        created_at: new Date().toISOString(),
+      };
+    }
+    // TODO(phase-2-backend): wire to the confirm endpoint once available.
+    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
   },
 };

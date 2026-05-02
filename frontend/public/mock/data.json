@@ -239,5 +239,9 @@
       "iva_soportado": 0,
       "iva_a_pagar": 0
     }
-  ]
+  ],
+  "aiSummary": {
+    "narrative": "Your period income (€19,608) far exceeds expenses (€889.50), yielding a net profit margin of 95.5%. Telefónica Movistar accounts for 37% of your invoiced revenue — consider reducing reliance on a single client. Current-quarter VAT due stands at €877.38.",
+    "generated_at": "2026-04-30T10:00:00.000Z"
+  }
 }
