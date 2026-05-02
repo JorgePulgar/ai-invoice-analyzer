@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { MonthlyChart } from '../components/MonthlyChart';
@@ -43,6 +43,7 @@ function calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number 
 
 export function DashboardPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Server-provided data (unfiltered)
   const [serverSummary, setServerSummary] = useState<Summary | null>(null);
@@ -183,7 +184,7 @@ export function DashboardPage() {
         <DashboardFilters facturas={facturasOriginal} />
       </div>
 
-      {summary && (
+      {summary && summary.periodo.desde && (
         <div className="flex items-center justify-between mb-4" data-print-hide>
           <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted">
             Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
@@ -204,8 +205,18 @@ export function DashboardPage() {
       </div>
 
       {filteredFacturas.length === 0 && filtersActive ? (
-        <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
-          <p className="text-bn-muted">Ninguna factura coincide con los filtros seleccionados.</p>
+        <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-20 text-center mb-6 flex flex-col items-center gap-4">
+          <span className="text-4xl opacity-40">🔍</span>
+          <p className="text-bn-body font-semibold">Sin resultados para este periodo</p>
+          <p className="text-bn-muted text-sm max-w-sm">
+            Los filtros activos no devuelven facturas. Prueba con un rango de fechas diferente o limpia los filtros para ver todos los datos.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard', { replace: true })}
+            className="mt-2 text-sm font-semibold bg-bn-yellow text-bn-ink px-5 py-2 rounded-lg hover:bg-bn-yellow-hover transition-colors"
+          >
+            Limpiar filtros
+          </button>
         </div>
       ) : (
         <>
