@@ -241,8 +241,81 @@ Pre-requisite: Phase 2 merged to `main`.
 
 ---
 
-### Phase 4 — Stretch (high level)
+## Phase 4 — Polish & Production Readiness
 
-- Alerts: client dependency thresholds, VAT due-date reminders.
-- PDF dashboard export endpoint (optional — may be handled entirely client-side).
-- Landing page.
+Pre-requisite for all blocks: Phase 3 merged to `main`.
+
+---
+
+### Block 4.1 — Demo seed data
+
+- [ ] Create demo seed script
+  - File: `scripts/seed-demo.js`
+  - Creates a demo user (`demo@invoice-insights.com` / `demo1234`) if one does not already exist. Idempotent — safe to run multiple times without creating duplicate rows.
+  - Inserts ~25–30 realistic Spanish invoices spread across the last 12 months:
+    - At least 6 distinct income clients (`receptor`) so `TopClientsList` and `RevenueChart` have meaningful segments.
+    - At least 4 distinct expense suppliers (`emisor`) so `TopSuppliersList` is populated.
+    - `gastos` ≈ 15–25 % of total `ingresos` to produce a healthy profit margin line.
+    - Expense `concepto` values use keywords from `ExpenseCategoriesChart` categories: "hosting", "marketing", "transporte", "material oficina", etc. — at least 4 distinct categories.
+    - IVA rates: mix of 21 % and 10 %. At least 3 `ingreso` invoices with `irpf_porcentaje: 15` so `IrpfWidget` shows a non-zero amount.
+    - Date spread: at least 2 invoices per month over the last 10 months plus a few older ones so `InvoiceHeatmap` shows activity across the calendar year.
+  - Script inserts rows directly into SQLite via `better-sqlite3` — do NOT call the upload endpoint or the extractor (avoids Azure calls during seeding).
+  - Add `"seed:demo": "node scripts/seed-demo.js"` to `package.json`.
+
+- [ ] Smoke test for seed data
+  - Run `npm run seed:demo` twice; assert idempotency (no duplicate rows, no error on second run).
+  - Run the analytics smoke script against the demo account; assert all 4 endpoints (`summary`, `monthly`, `clients`, `vat`) return non-empty, non-zero data.
+  - Capture both run outputs in the commit body.
+
+**Block 4.1 closes with**: `git push origin dev-backend`.
+
+---
+
+### Block 4.2 — Alerts endpoint
+
+Pre-requisite: Block 4.1 complete.
+
+> Complements the client-side `AlertsBanner` built in frontend Block 4.3. A dedicated endpoint lets the frontend offload threshold logic and opens the door to future push notifications.
+
+- [ ] Implement `GET /api/analytics/alerts`
+  - File: `src/routes/analytics.js`.
+  - Auth required. No query params.
+  - Derives up to 3 alert types from the authenticated user's live data:
+    1. **Client concentration** — top client `facturado / ingresos_totales > 0.5`. Payload: `{ type: 'client_concentration', current: <ratio>, cliente: <name> }`.
+    2. **VAT due soon** — today is within 15 calendar days before a quarter end (Mar 31, Jun 30, Sep 30, Dec 31) and `iva_a_pagar > 0` for that quarter. Payload: `{ type: 'vat_due', days_remaining: <n>, trimestre: 'T2', iva_a_pagar: <amount> }`.
+    3. **IRPF annual** — month is December and `irpf_retenido > 0`. Payload: `{ type: 'irpf_annual', irpf_retenido: <amount> }`.
+  - Response: `{ alerts: [...] }`. Empty array when no threshold is met.
+  - Add the endpoint shape to `docs/api-contract.md` under the Analytics section (coordinate with the frontend developer before merging).
+
+- [ ] Smoke test for alerts
+  - File: `scripts/smoke/alerts.js`.
+  - Seed a user with a dominant single client (> 50 % of income). Hit the endpoint; assert `client_concentration` appears. Re-seed with balanced clients; assert empty `alerts` array.
+  - Capture output in the commit body.
+
+**Block 4.2 closes with**: `git push origin dev-backend`.
+
+---
+
+### Block 4.3 — Security hardening
+
+Pre-requisite: Phase 3 merged to `main`.
+
+- [ ] Add HTTP security headers via `helmet`
+  - Install `helmet` (justification: sets 11 security-relevant response headers in one call; equivalent manual work would be verbose and drift-prone).
+  - Wire `app.use(helmet())` in `src/app.js` before any route or middleware.
+
+- [ ] Tighten CORS for production
+  - If `NODE_ENV === 'production'` and `CORS_ORIGIN` is `*` or unset, crash at startup with a clear error message. Document the required value in `.env.example`.
+  - Confirm `CORS_ORIGIN` accepts a comma-separated list so multiple origins (e.g., `https://app.example.com,https://www.example.com`) work without code changes.
+
+- [ ] Add global rate limiter
+  - Extend `express-rate-limit` (already installed) with a general limiter: 100 requests / 15 minutes per IP, applied to all routes before the router mounts.
+  - Upload-specific limiter (10 req / 60 s per user) stays as-is.
+  - Env var: `GENERAL_RATE_LIMIT_MAX` (default 100). Document in `.env.example`.
+
+- [ ] Smoke test for security headers
+  - File: `scripts/smoke/security.js`.
+  - Hit `GET /api/health`; assert response includes `x-content-type-options`, `x-frame-options`, and `x-xss-protection` headers.
+  - Capture output in the commit body.
+
+**Block 4.3 closes with**: `git push origin dev-backend`. **End of Phase 4.** Open a PR from `dev-backend` to `main` summarising the phase.
