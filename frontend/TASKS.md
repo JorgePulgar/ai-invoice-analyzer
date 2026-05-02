@@ -436,7 +436,7 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
 
 ### Block 4.3 — Alerts banner
 
-- [ ] Create `AlertsBanner` component
+- [x] Create `AlertsBanner` component
   - File: `src/components/AlertsBanner.tsx`
   - Props: `{ summary: Summary; vat: VatEntry[] }`. All logic is client-side — no new endpoint.
   - Derives up to 3 alert types:

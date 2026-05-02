@@ -18,6 +18,7 @@ import { deriveInsights } from '../utils/insights';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
+import { AlertsBanner } from '../components/AlertsBanner';
 import { api } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import {
@@ -175,6 +176,7 @@ export function DashboardPage() {
   return (
     <Layout>
       <AiSummaryCard summary={aiSummary} loading={false} />
+      <AlertsBanner summary={summary} vat={vat} clients={clients} />
       <DashboardFilters facturas={facturasOriginal} />
 
       {summary && (
