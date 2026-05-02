@@ -396,7 +396,7 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
 
 > The seed script itself lives in `backend/` and is tracked in `backend/TASKS.md`. This block covers the frontend verification step only.
 
-- [ ] Verify demo dashboard renders well with seed data
+- [x] Verify demo dashboard renders well with seed data
   - Log in as the demo account (`demo@invoice-insights.com` / `demo1234` — credentials set by the backend seed script).
   - Walk through every dashboard section:
     - KPI row: all 7 cards populated with non-zero values.
