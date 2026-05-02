@@ -21,6 +21,14 @@ import {
 } from '../utils/filters';
 import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura, AiSummary } from '../types';
 
+function calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number | null {
+  if (monthly.length < 6) return null;
+  const recent = monthly.slice(-3).reduce((s, m) => s + m[key], 0);
+  const prior = monthly.slice(-6, -3).reduce((s, m) => s + m[key], 0);
+  if (prior === 0) return null;
+  return ((recent - prior) / prior) * 100;
+}
+
 export function DashboardPage() {
   const [searchParams] = useSearchParams();
 
@@ -99,10 +107,23 @@ export function DashboardPage() {
   const clients = filtersActive ? deriveClients(filteredFacturas) : serverClients;
   const vat = filtersActive ? deriveVat(filteredFacturas) : serverVat;
 
+  const ingresosTrend = calcTrend(monthly, 'ingresos');
+  const gastosTrend = calcTrend(monthly, 'gastos');
+
   const kpis = summary
     ? [
-        { label: 'Total Income', value: formatCurrency(summary.ingresos_totales), tone: 'up' as const },
-        { label: 'Total Expenses', value: formatCurrency(summary.gastos_totales), tone: 'down' as const },
+        {
+          label: 'Total Income',
+          value: formatCurrency(summary.ingresos_totales),
+          tone: 'up' as const,
+          trend: ingresosTrend !== null ? { pct: ingresosTrend } : undefined,
+        },
+        {
+          label: 'Total Expenses',
+          value: formatCurrency(summary.gastos_totales),
+          tone: 'down' as const,
+          trend: gastosTrend !== null ? { pct: gastosTrend } : undefined,
+        },
         {
           label: 'Net Profit',
           value: formatCurrency(summary.beneficio_neto),
@@ -128,7 +149,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
         {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} />
+          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} />
         ))}
       </div>
 

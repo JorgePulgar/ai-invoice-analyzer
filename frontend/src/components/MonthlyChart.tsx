@@ -3,40 +3,79 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  LineElement,
+  PointElement,
+  LineController,
+  BarController,
   Tooltip,
   Legend,
 } from 'chart.js';
-import type { TooltipItem } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
+import type { ChartDataset, TooltipItem } from 'chart.js';
+import { Chart } from 'react-chartjs-2';
 import type { MonthlyEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  LineElement,
+  PointElement,
+  LineController,
+  BarController,
+  Tooltip,
+  Legend,
+);
 
 interface MonthlyChartProps {
   data: MonthlyEntry[];
+  forecast?: boolean;
 }
 
-export function MonthlyChart({ data }: MonthlyChartProps) {
+export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
+  const displayData = forecast ? addForecast(data) : data;
+
+  const barDataset: ChartDataset<'bar'> = {
+    type: 'bar',
+    label: 'Income',
+    data: displayData.map((d) => d.ingresos),
+    backgroundColor: 'rgba(14, 203, 129, 0.65)',
+    borderColor: '#0ECB81',
+    borderWidth: 1,
+    borderRadius: 4,
+  };
+
+  const expenseDataset: ChartDataset<'bar'> = {
+    type: 'bar',
+    label: 'Expenses',
+    data: displayData.map((d) => d.gastos),
+    backgroundColor: 'rgba(246, 70, 93, 0.65)',
+    borderColor: '#F6465D',
+    borderWidth: 1,
+    borderRadius: 4,
+  };
+
+  const profitDataset: ChartDataset<'line'> = {
+    type: 'line',
+    label: 'Net Profit',
+    data: displayData.map((d) => d.ingresos - d.gastos),
+    borderColor: 'rgb(252, 213, 53)',
+    backgroundColor: 'rgba(252, 213, 53, 0.1)',
+    tension: 0.4,
+    pointRadius: 3,
+    borderWidth: 2,
+    yAxisID: 'y',
+  };
+
   const chartData = {
-    labels: data.map((d) => d.mes),
+    labels: displayData.map((d, i) => {
+      const isForecast = forecast && i >= data.length;
+      return isForecast ? `${d.mes}*` : d.mes;
+    }),
     datasets: [
-      {
-        label: 'Income',
-        data: data.map((d) => d.ingresos),
-        backgroundColor: 'rgba(14, 203, 129, 0.65)',
-        borderColor: '#0ECB81',
-        borderWidth: 1,
-        borderRadius: 4,
-      },
-      {
-        label: 'Expenses',
-        data: data.map((d) => d.gastos),
-        backgroundColor: 'rgba(246, 70, 93, 0.65)',
-        borderColor: '#F6465D',
-        borderWidth: 1,
-        borderRadius: 4,
-      },
+      barDataset,
+      expenseDataset,
+      profitDataset as unknown as ChartDataset<'bar'>,
     ],
   };
 
@@ -76,7 +115,26 @@ export function MonthlyChart({ data }: MonthlyChartProps) {
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
         Monthly Overview
       </h3>
-      <Bar data={chartData} options={options} />
+      <Chart type="bar" data={chartData} options={options} />
     </div>
   );
+}
+
+function addForecast(data: MonthlyEntry[]): MonthlyEntry[] {
+  if (data.length < 3) return data;
+  const last3 = data.slice(-3);
+  const avgIngresos = last3.reduce((s, m) => s + m.ingresos, 0) / 3;
+  const avgGastos = last3.reduce((s, m) => s + m.gastos, 0) / 3;
+  const lastMes = data[data.length - 1].mes;
+  const synthetic: MonthlyEntry[] = [];
+  for (let i = 1; i <= 3; i++) {
+    synthetic.push({ mes: addMonths(lastMes, i), ingresos: avgIngresos, gastos: avgGastos });
+  }
+  return [...data, ...synthetic];
+}
+
+function addMonths(yyyyMm: string, n: number): string {
+  const [y, m] = yyyyMm.split('-').map(Number);
+  const d = new Date(y, m - 1 + n, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
 }

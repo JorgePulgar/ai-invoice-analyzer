@@ -2,6 +2,7 @@ interface KpiCardProps {
   label: string;
   value: string;
   tone?: 'up' | 'down' | 'neutral';
+  trend?: { pct: number };
 }
 
 const toneClasses: Record<NonNullable<KpiCardProps['tone']>, string> = {
@@ -16,7 +17,7 @@ const toneGlyph: Record<NonNullable<KpiCardProps['tone']>, string | null> = {
   neutral: null,
 };
 
-export function KpiCard({ label, value, tone = 'neutral' }: KpiCardProps) {
+export function KpiCard({ label, value, tone = 'neutral', trend }: KpiCardProps) {
   const glyph = toneGlyph[tone];
 
   return (
@@ -26,6 +27,11 @@ export function KpiCard({ label, value, tone = 'neutral' }: KpiCardProps) {
         {glyph && <span className="text-base">{glyph}</span>}
         {value}
       </p>
+      {trend !== undefined && (
+        <p className={`text-xs mt-1 font-medium ${trend.pct >= 0 ? 'text-bn-up' : 'text-bn-down'}`}>
+          {trend.pct >= 0 ? '↑' : '↓'} {trend.pct >= 0 ? '+' : ''}{Math.round(trend.pct)}%
+        </p>
+      )}
     </div>
   );
 }
