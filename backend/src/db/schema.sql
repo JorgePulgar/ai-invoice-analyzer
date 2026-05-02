@@ -62,3 +62,10 @@ CREATE TABLE IF NOT EXISTS facturas_draft (
 );
 
 CREATE INDEX IF NOT EXISTS idx_drafts_user_status ON facturas_draft(user_id, status);
+
+-- Per-user cache for the dashboard AI summary. One row per user, upserted on regeneration.
+CREATE TABLE IF NOT EXISTS ai_summary_cache (
+  user_id      INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  narrative    TEXT    NOT NULL,
+  generated_at TEXT    NOT NULL
+);
