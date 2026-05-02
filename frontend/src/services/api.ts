@@ -164,16 +164,20 @@ export const api = {
 
   // --- Phase 2 upload (extract → review → confirm) ---
 
-  async extractFactura(_file: File): Promise<DraftFactura> {
+  async extractFactura(file: File): Promise<DraftFactura> {
     if (USE_MOCK) {
       const m = await loadMock();
       await new Promise((r) => setTimeout(r, 800));
       const { id: _id, created_at: _ca, ...draft } = m.facturas[0];
       return draft;
     }
-    // TODO(phase-2-backend): wire to a draft-extraction endpoint once the
-    // contract addendum is approved and Jorge ships the endpoint.
-    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
+    const fd = new FormData();
+    fd.append('file', file);
+    const { draft } = await request<{ draft: Factura & { status: string } }>(
+      'POST', '/facturas/upload', fd, true,
+    );
+    const { status: _s, created_at: _ca, ...fields } = draft;
+    return fields;
   },
 
   async confirmFactura(draft: DraftFactura): Promise<Factura> {
@@ -181,11 +185,18 @@ export const api = {
       await new Promise((r) => setTimeout(r, 300));
       return {
         ...draft,
-        id: Math.floor(Math.random() * 10000) + 100,
+        id: draft.id ?? Math.floor(Math.random() * 10000) + 100,
         created_at: new Date().toISOString(),
       };
     }
-    // TODO(phase-2-backend): wire to the confirm endpoint once available.
-    throw new Error('Manual validation not yet available (pending Phase 2 backend).');
+    const draftId = draft.id;
+    if (!draftId) throw new Error('Cannot confirm: draft id missing');
+    const { id: _id, ...body } = draft;
+    return request<Factura>('POST', `/facturas/drafts/${draftId}/confirm`, body);
+  },
+
+  async discardDraft(id: number): Promise<void> {
+    if (USE_MOCK) return;
+    await request<{ id: number }>('DELETE', `/facturas/drafts/${id}`);
   },
 };

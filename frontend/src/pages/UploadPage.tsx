@@ -9,7 +9,6 @@ import type { DraftFactura, Factura } from '../types';
 type Status = 'idle' | 'extracting' | 'review' | 'saving' | 'success' | 'error';
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
-const PHASE2_PENDING_MSG = 'Manual validation not yet available (pending Phase 2 backend).';
 
 function validateFile(file: File): string | null {
   if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
@@ -47,20 +46,8 @@ export function UploadPage() {
       setDraft(extracted);
       setStatus('review');
     } catch (err) {
-      if (err instanceof Error && err.message === PHASE2_PENDING_MSG) {
-        // Live backend: fall back to Phase 1 direct-upload flow
-        try {
-          const factura = await api.uploadFactura(file);
-          setResult(factura);
-          setStatus('success');
-        } catch (uploadErr) {
-          setError(uploadErr instanceof Error ? uploadErr.message : 'Error processing the invoice');
-          setStatus('error');
-        }
-      } else {
-        setError(err instanceof Error ? err.message : 'Error extracting the invoice');
-        setStatus('error');
-      }
+      setError(err instanceof Error ? err.message : 'Error extracting the invoice');
+      setStatus('error');
     }
   };
 
@@ -78,6 +65,9 @@ export function UploadPage() {
   };
 
   const handleDiscard = () => {
+    if (draft?.id) {
+      api.discardDraft(draft.id).catch(() => {});
+    }
     setDraft(null);
     setError(null);
     setStatus('idle');
