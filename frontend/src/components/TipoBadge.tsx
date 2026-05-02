@@ -18,7 +18,7 @@ export function TipoBadge({ tipo, size = 'sm' }: TipoBadgeProps) {
       }`}
     >
       <span className="text-[10px]">{isIngreso ? '▲' : '▼'}</span>
-      {isIngreso ? 'Income' : 'Expense'}
+      {isIngreso ? 'Ingreso' : 'Gasto'}
     </span>
   );
 }

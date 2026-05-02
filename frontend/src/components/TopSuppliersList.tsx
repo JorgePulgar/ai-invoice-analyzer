@@ -27,7 +27,7 @@ export function TopSuppliersList({ suppliers }: TopSuppliersListProps) {
                 {formatCurrency(supplier.gastado)}
               </p>
               <p className="text-xs text-bn-muted">
-                {supplier.num_facturas} {supplier.num_facturas === 1 ? 'invoice' : 'invoices'}
+                {supplier.num_facturas} {supplier.num_facturas === 1 ? 'factura' : 'facturas'}
               </p>
             </div>
           </li>
