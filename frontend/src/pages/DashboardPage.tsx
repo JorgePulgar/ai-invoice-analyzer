@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
@@ -108,19 +108,39 @@ export function DashboardPage() {
     );
   }
 
-  // Apply filters
-  const filterState = parseFilters(searchParams);
-  const filtersActive = !isDefaultFilters(filterState);
+  // Filters are URL-driven. Derived analytics are memoised against the serialised
+  // search-params string so any URL change reliably triggers a recompute. Without
+  // this, child components could see stale derived data when only filter values
+  // (not facturas) change between renders.
+  const paramsKey = searchParams.toString();
+  const filterState = useMemo(() => parseFilters(searchParams), [paramsKey, searchParams]);
+  const filtersActive = useMemo(() => !isDefaultFilters(filterState), [filterState]);
 
-  const filteredFacturas = filtersActive
-    ? applyFilters(facturasOriginal, filterState)
-    : facturasOriginal;
+  const filteredFacturas = useMemo(
+    () => (filtersActive ? applyFilters(facturasOriginal, filterState) : facturasOriginal),
+    [filtersActive, facturasOriginal, filterState],
+  );
 
-  const summary = filtersActive ? deriveSummary(filteredFacturas) : serverSummary;
-  const monthly = filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly;
-  const clients = filtersActive ? deriveClients(filteredFacturas) : serverClients;
-  const vat = filtersActive ? deriveVat(filteredFacturas) : serverVat;
-  const suppliers = filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers;
+  const summary = useMemo(
+    () => (filtersActive ? deriveSummary(filteredFacturas) : serverSummary),
+    [filtersActive, filteredFacturas, serverSummary],
+  );
+  const monthly = useMemo(
+    () => (filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly),
+    [filtersActive, filteredFacturas, serverMonthly],
+  );
+  const clients = useMemo(
+    () => (filtersActive ? deriveClients(filteredFacturas) : serverClients),
+    [filtersActive, filteredFacturas, serverClients],
+  );
+  const vat = useMemo(
+    () => (filtersActive ? deriveVat(filteredFacturas) : serverVat),
+    [filtersActive, filteredFacturas, serverVat],
+  );
+  const suppliers = useMemo(
+    () => (filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers),
+    [filtersActive, filteredFacturas, serverSuppliers],
+  );
 
   const ingresosTrend = calcTrend(monthly, 'ingresos');
   const gastosTrend = calcTrend(monthly, 'gastos');
