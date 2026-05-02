@@ -4,6 +4,9 @@ import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { MonthlyChart } from '../components/MonthlyChart';
 import { TopClientsList } from '../components/TopClientsList';
+import { TopSuppliersList } from '../components/TopSuppliersList';
+import { RevenueChart } from '../components/RevenueChart';
+import { ExpenseCategoriesChart } from '../components/ExpenseCategoriesChart';
 import { VatTable } from '../components/VatTable';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
@@ -18,8 +21,9 @@ import {
   deriveMonthly,
   deriveClients,
   deriveVat,
+  deriveSuppliers,
 } from '../utils/filters';
-import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura, AiSummary } from '../types';
+import type { Summary, MonthlyEntry, ClientEntry, VatEntry, Factura, AiSummary, SupplierEntry } from '../types';
 
 function calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number | null {
   if (monthly.length < 6) return null;
@@ -37,6 +41,7 @@ export function DashboardPage() {
   const [serverMonthly, setServerMonthly] = useState<MonthlyEntry[]>([]);
   const [serverClients, setServerClients] = useState<ClientEntry[]>([]);
   const [serverVat, setServerVat] = useState<VatEntry[]>([]);
+  const [serverSuppliers, setServerSuppliers] = useState<SupplierEntry[]>([]);
   const [facturasOriginal, setFacturasOriginal] = useState<Factura[]>([]);
   const [aiSummary, setAiSummary] = useState<AiSummary | null>(null);
 
@@ -51,14 +56,16 @@ export function DashboardPage() {
       api.getVat(),
       api.listFacturas(),
       api.getAiSummary(),
+      api.getSuppliers(),
     ])
-      .then(([s, m, c, v, f, ai]) => {
+      .then(([s, m, c, v, f, ai, sup]) => {
         setServerSummary(s);
         setServerMonthly(m);
         setServerClients(c);
         setServerVat(v);
         setFacturasOriginal(f.facturas);
         setAiSummary(ai);
+        setServerSuppliers(sup);
       })
       .catch((err: unknown) => {
         setError(err instanceof Error ? err.message : 'Error loading data');
@@ -106,6 +113,7 @@ export function DashboardPage() {
   const monthly = filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly;
   const clients = filtersActive ? deriveClients(filteredFacturas) : serverClients;
   const vat = filtersActive ? deriveVat(filteredFacturas) : serverVat;
+  const suppliers = filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers;
 
   const ingresosTrend = calcTrend(monthly, 'ingresos');
   const gastosTrend = calcTrend(monthly, 'gastos');
@@ -165,6 +173,15 @@ export function DashboardPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <TopClientsList clients={clients} />
+            <TopSuppliersList suppliers={suppliers} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <RevenueChart clients={clients} />
+            <ExpenseCategoriesChart facturas={filteredFacturas} />
+          </div>
+
+          <div className="mb-6">
             <VatTable vat={vat} />
           </div>
         </>

@@ -1,4 +1,4 @@
-import type { ClientEntry, Factura, MonthlyEntry, Summary, VatEntry } from '../types';
+import type { ClientEntry, Factura, MonthlyEntry, Summary, SupplierEntry, VatEntry } from '../types';
 
 export type PeriodoOption = 'todos' | 'mes' | 'trimestre' | 'anio' | 'anio12';
 export type TipoOption = 'todos' | 'ingreso' | 'gasto';
@@ -158,6 +158,24 @@ export function deriveClients(facturas: Factura[]): ClientEntry[] {
 
   return Array.from(map.values())
     .sort((a, b) => b.facturado - a.facturado)
+    .slice(0, 10);
+}
+
+export function deriveSuppliers(facturas: Factura[]): SupplierEntry[] {
+  const map = new Map<string, SupplierEntry>();
+
+  for (const f of facturas.filter((f) => f.tipo === 'gasto')) {
+    const existing = map.get(f.emisor);
+    if (existing) {
+      existing.gastado += f.total;
+      existing.num_facturas += 1;
+    } else {
+      map.set(f.emisor, { proveedor: f.emisor, gastado: f.total, num_facturas: 1 });
+    }
+  }
+
+  return Array.from(map.values())
+    .sort((a, b) => b.gastado - a.gastado)
     .slice(0, 10);
 }
 

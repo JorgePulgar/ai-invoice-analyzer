@@ -9,6 +9,7 @@ import {
   deriveMonthly,
   deriveClients,
   deriveVat,
+  deriveSuppliers,
 } from '../../src/utils/filters';
 
 // Fixed reference date for all date-sensitive tests: 2026-04-15 (Q2 2026)
@@ -424,5 +425,58 @@ describe('deriveVat', () => {
       );
       expect(result[qIndex].iva_repercutido, `fecha ${fecha} should be in Q${qIndex + 1}`).toBe(100);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// deriveSuppliers
+// ---------------------------------------------------------------------------
+describe('deriveSuppliers', () => {
+  it('returns empty array for no facturas', () => {
+    expect(deriveSuppliers([])).toEqual([]);
+  });
+
+  it('ignores ingreso facturas', () => {
+    const result = deriveSuppliers([makeFactura({ tipo: 'ingreso', emisor: 'Self SL' })]);
+    expect(result).toHaveLength(0);
+  });
+
+  it('aggregates gastos by emisor', () => {
+    const facturas = [
+      makeFactura({ tipo: 'gasto', emisor: 'AWS', total: 200 }),
+      makeFactura({ tipo: 'gasto', emisor: 'AWS', total: 100 }),
+    ];
+    const result = deriveSuppliers(facturas);
+    expect(result).toHaveLength(1);
+    expect(result[0].proveedor).toBe('AWS');
+    expect(result[0].gastado).toBe(300);
+    expect(result[0].num_facturas).toBe(2);
+  });
+
+  it('sorts by gastado descending', () => {
+    const facturas = [
+      makeFactura({ tipo: 'gasto', emisor: 'Cheap Co', total: 50 }),
+      makeFactura({ tipo: 'gasto', emisor: 'Expensive Co', total: 500 }),
+    ];
+    const result = deriveSuppliers(facturas);
+    expect(result[0].proveedor).toBe('Expensive Co');
+    expect(result[1].proveedor).toBe('Cheap Co');
+  });
+
+  it('limits to 10 suppliers', () => {
+    const facturas = Array.from({ length: 15 }, (_, i) =>
+      makeFactura({ tipo: 'gasto', emisor: `Supplier ${i}`, total: 100 }),
+    );
+    expect(deriveSuppliers(facturas)).toHaveLength(10);
+  });
+
+  it('mixes ingreso and gasto; only gasto counted', () => {
+    const facturas = [
+      makeFactura({ tipo: 'ingreso', emisor: 'Client A', total: 1000 }),
+      makeFactura({ tipo: 'gasto', emisor: 'Vendor B', total: 200 }),
+    ];
+    const result = deriveSuppliers(facturas);
+    expect(result).toHaveLength(1);
+    expect(result[0].proveedor).toBe('Vendor B');
   });
 });
