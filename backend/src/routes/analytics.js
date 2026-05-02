@@ -75,6 +75,56 @@ router.get('/vat', async (req, res, next) => {
   }
 });
 
+router.get('/alerts', async (req, res, next) => {
+  try {
+    const db = getDb();
+    const userId = req.user.id;
+    const alerts = [];
+
+    const summary = getSummary(db, userId, {});
+    const clients = getTopClients(db, userId, 1, {});
+
+    // Client concentration: top client > 50 % of total income.
+    if (summary.ingresos_totales > 0 && clients.length > 0) {
+      const ratio = Math.round((clients[0].facturado / summary.ingresos_totales) * 100) / 100;
+      if (ratio > 0.5) {
+        alerts.push({ type: 'client_concentration', current: ratio, cliente: clients[0].cliente });
+      }
+    }
+
+    // VAT due soon: today within 15 days before a quarter end and iva_a_pagar > 0.
+    const vat = getVatBreakdown(db, userId, {});
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const year = today.getFullYear();
+    const quarterEnds = [
+      { trimestre: 'T1', end: new Date(year, 2, 31) },
+      { trimestre: 'T2', end: new Date(year, 5, 30) },
+      { trimestre: 'T3', end: new Date(year, 8, 30) },
+      { trimestre: 'T4', end: new Date(year, 11, 31) },
+    ];
+    for (const { trimestre, end } of quarterEnds) {
+      const daysRemaining = Math.round((end - today) / 86_400_000);
+      if (daysRemaining >= 0 && daysRemaining <= 15) {
+        const q = vat.find((v) => v.trimestre === trimestre);
+        if (q && q.iva_a_pagar > 0) {
+          alerts.push({ type: 'vat_due', days_remaining: daysRemaining, trimestre, iva_a_pagar: q.iva_a_pagar });
+        }
+        break;
+      }
+    }
+
+    // IRPF annual: December and irpf_retenido > 0.
+    if (today.getMonth() === 11 && summary.irpf_retenido > 0) {
+      alerts.push({ type: 'irpf_annual', irpf_retenido: summary.irpf_retenido });
+    }
+
+    return ok(res, { alerts });
+  } catch (err) {
+    next(err);
+  }
+});
+
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 router.get('/ai-summary', async (req, res, next) => {

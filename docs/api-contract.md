@@ -360,6 +360,30 @@ Errors:
 
 Cache semantics: the narrative is regenerated when the cached value is older than 24 hours. Calling the endpoint multiple times within 24 hours returns the same `narrative` and `generated_at`.
 
+#### `GET /api/analytics/alerts`
+
+Auth required. No query params. Derives up to 3 alert types from the user's live data.
+
+Response 200 — `data`:
+```json
+{
+  "alerts": [
+    { "type": "client_concentration", "current": 0.65, "cliente": "Telefónica España SA" },
+    { "type": "vat_due", "days_remaining": 7, "trimestre": "T2", "iva_a_pagar": 1234.56 },
+    { "type": "irpf_annual", "irpf_retenido": 2865.00 }
+  ]
+}
+```
+
+Empty array when no threshold is met: `{ "alerts": [] }`.
+
+Alert rules:
+- `client_concentration` — top client `facturado / ingresos_totales > 0.5`. `current` is the ratio rounded to 2 decimal places.
+- `vat_due` — today is within 15 calendar days before a quarter end (Mar 31, Jun 30, Sep 30, Dec 31) and `iva_a_pagar > 0` for that quarter. `days_remaining` is the number of days until the quarter end date (0 = today is the end date).
+- `irpf_annual` — current month is December and `irpf_retenido > 0`.
+
+At most one alert per type. At most 3 alerts total.
+
 ---
 
 ## Extractor output (internal contract)

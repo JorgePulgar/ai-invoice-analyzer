@@ -277,7 +277,7 @@ Pre-requisite: Block 4.1 complete.
 
 > Complements the client-side `AlertsBanner` built in frontend Block 4.3. A dedicated endpoint lets the frontend offload threshold logic and opens the door to future push notifications.
 
-- [ ] Implement `GET /api/analytics/alerts`
+- [x] Implement `GET /api/analytics/alerts`
   - File: `src/routes/analytics.js`.
   - Auth required. No query params.
   - Derives up to 3 alert types from the authenticated user's live data:
@@ -287,7 +287,7 @@ Pre-requisite: Block 4.1 complete.
   - Response: `{ alerts: [...] }`. Empty array when no threshold is met.
   - Add the endpoint shape to `docs/api-contract.md` under the Analytics section (coordinate with the frontend developer before merging).
 
-- [ ] Smoke test for alerts
+- [x] Smoke test for alerts
   - File: `scripts/smoke/alerts.js`.
   - Seed a user with a dominant single client (> 50 % of income). Hit the endpoint; assert `client_concentration` appears. Re-seed with balanced clients; assert empty `alerts` array.
   - Capture output in the commit body.
