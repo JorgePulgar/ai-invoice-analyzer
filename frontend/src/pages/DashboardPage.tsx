@@ -109,6 +109,9 @@ export function DashboardPage() {
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
         },
         { label: 'VAT Due', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
+        { label: 'IRPF Retenido', value: formatCurrency(summary.irpf_retenido), tone: 'neutral' as const },
+        { label: 'Ticket Medio', value: formatCurrency(summary.ticket_medio), tone: 'neutral' as const },
+        { label: 'Num. Facturas', value: String(summary.num_facturas), tone: 'neutral' as const },
       ]
     : [];
 
@@ -117,7 +120,7 @@ export function DashboardPage() {
       <AiSummaryCard summary={aiSummary} loading={false} />
       <DashboardFilters facturas={facturasOriginal} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} />
         ))}
