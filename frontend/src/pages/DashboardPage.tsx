@@ -153,22 +153,25 @@ export function DashboardPage() {
           value: formatCurrency(summary.ingresos_totales),
           tone: 'up' as const,
           trend: ingresosTrend !== null ? { pct: ingresosTrend } : undefined,
+          icon: '+',
         },
         {
           label: 'Gastos totales',
           value: formatCurrency(summary.gastos_totales),
           tone: 'down' as const,
           trend: gastosTrend !== null ? { pct: gastosTrend } : undefined,
+          icon: '−',
         },
         {
           label: 'Beneficio neto',
           value: formatCurrency(summary.beneficio_neto),
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
+          icon: '=',
         },
-        { label: 'IVA a pagar', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
-        { label: 'IRPF Retenido', value: formatCurrency(summary.irpf_retenido), tone: 'neutral' as const },
-        { label: 'Ticket Medio', value: formatCurrency(summary.ticket_medio), tone: 'neutral' as const },
-        { label: 'Num. Facturas', value: String(summary.num_facturas), tone: 'neutral' as const },
+        { label: 'IVA a pagar',    value: formatCurrency(summary.iva_a_pagar),    tone: 'neutral' as const, icon: '%' },
+        { label: 'IRPF Retenido',  value: formatCurrency(summary.irpf_retenido),  tone: 'neutral' as const, icon: '‱' },
+        { label: 'Ticket Medio',   value: formatCurrency(summary.ticket_medio),   tone: 'neutral' as const, icon: '⌀' },
+        { label: 'Num. Facturas',  value: String(summary.num_facturas),           tone: 'neutral' as const, icon: '#' },
       ]
     : [];
 
@@ -196,7 +199,7 @@ export function DashboardPage() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6 mb-6">
         {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} />
+          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} icon={kpi.icon} />
         ))}
       </div>
 
