@@ -168,6 +168,17 @@ All blocks (2.1–2.4) implemented and tested. Ready to merge to main.
 
 **Block 2.4 closes with**: `git push origin dev-frontend`. **End of Phase 2.** Open a PR from `dev-frontend` to `main` summarising the phase.
 
+---
+
+### Block 2.5 — Automated unit tests for filter math
+
+- [x] Install `vitest` and add `test` / `test:run` scripts to `package.json`.
+- [x] Create `tests/utils/filters.test.ts` with 46 test cases covering all 7 exports of `src/utils/filters.ts` (`parseFilters`, `isDefaultFilters`, `applyFilters`, `deriveSummary`, `deriveMonthly`, `deriveClients`, `deriveVat`).
+
+**Block 2.5 closes with**: `git push origin dev-frontend`.
+
+---
+
 ## Phase 3 — Stretch (high level)
 
 - Alerts UI (client dependency, VAT due dates).
