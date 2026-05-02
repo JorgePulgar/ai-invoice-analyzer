@@ -13,6 +13,7 @@ import { IrpfWidget } from '../components/IrpfWidget';
 import { CashFlowChart } from '../components/CashFlowChart';
 import { ProfitMarginChart } from '../components/ProfitMarginChart';
 import { InsightsPanel } from '../components/InsightsPanel';
+import { InvoiceHeatmap } from '../components/InvoiceHeatmap';
 import { deriveInsights } from '../utils/insights';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
@@ -175,7 +176,7 @@ export function DashboardPage() {
       ) : (
         <>
           <div className="mb-6">
-            <MonthlyChart data={monthly} />
+            <MonthlyChart data={monthly} forecast={!filtersActive} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
@@ -205,6 +206,8 @@ export function DashboardPage() {
           </div>
 
           <InsightsPanel insights={insights} />
+
+          <InvoiceHeatmap facturas={filteredFacturas} />
         </>
       )}
 

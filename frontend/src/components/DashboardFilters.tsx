@@ -8,6 +8,34 @@ import {
   parseFilters,
 } from '../utils/filters';
 
+interface Preset {
+  label: string;
+  desde: string;
+  hasta: string;
+}
+
+function fmt(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function buildPresets(): Preset[] {
+  const today = new Date();
+  const year = today.getFullYear();
+
+  const minus = (days: number) => {
+    const d = new Date(today);
+    d.setDate(d.getDate() - days);
+    return fmt(d);
+  };
+
+  return [
+    { label: 'Últimos 30 días', desde: minus(30), hasta: fmt(today) },
+    { label: 'Últimos 3 meses', desde: minus(90), hasta: fmt(today) },
+    { label: 'Este año', desde: `${year}-01-01`, hasta: `${year}-12-31` },
+    { label: 'Año anterior', desde: `${year - 1}-01-01`, hasta: `${year - 1}-12-31` },
+  ];
+}
+
 interface DashboardFiltersProps {
   facturas: Factura[];
 }
@@ -37,12 +65,30 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
     new Set(facturas.filter((f) => f.tipo === 'ingreso').map((f) => f.receptor)),
   ).sort();
 
+  const presets = buildPresets();
+
+  function applyPreset(preset: Preset) {
+    const params = new URLSearchParams();
+    params.set('desde', preset.desde);
+    params.set('hasta', preset.hasta);
+    if (state.tipo !== 'todos') params.set('tipo', state.tipo);
+    if (state.cliente && state.tipo !== 'gasto') params.set('cliente', state.cliente);
+    setSearchParams(params, { replace: true });
+  }
+
+  function isActivePreset(preset: Preset) {
+    return state.desde === preset.desde && state.hasta === preset.hasta;
+  }
+
   function update(patch: Partial<FilterState>) {
     const next = { ...state, ...patch };
     const params = new URLSearchParams();
     if (next.periodo !== 'todos') params.set('periodo', next.periodo);
     if (next.tipo !== 'todos') params.set('tipo', next.tipo);
     if (next.cliente && next.tipo !== 'gasto') params.set('cliente', next.cliente);
+    // Carry over custom date range if set
+    if (next.desde) params.set('desde', next.desde);
+    if (next.hasta) params.set('hasta', next.hasta);
     setSearchParams(params, { replace: true });
   }
 
@@ -50,7 +96,27 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
   const clienteDisabled = state.tipo === 'gasto';
 
   return (
-    <div className="bg-bn-card border border-bn-hairline rounded-xl px-4 py-3 flex flex-wrap items-center gap-3 mb-6">
+    <div className="bg-bn-card border border-bn-hairline rounded-xl px-4 py-3 flex flex-col gap-3 mb-6">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-semibold text-bn-muted uppercase tracking-wide shrink-0 mr-1">
+          Quick filters
+        </span>
+        {presets.map((preset) => (
+          <button
+            key={preset.label}
+            onClick={() => applyPreset(preset)}
+            className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
+              isActivePreset(preset)
+                ? 'bg-bn-yellow text-black border-bn-yellow'
+                : 'border-bn-hairline text-bn-muted hover:border-bn-yellow hover:text-bn-yellow'
+            }`}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
       <span className="text-xs font-semibold text-bn-muted uppercase tracking-wide shrink-0">
         Filters
       </span>
@@ -104,6 +170,7 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
           Clear filters
         </button>
       )}
+      </div>
     </div>
   );
 }

@@ -34,9 +34,9 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
         borderWidth: 2,
         segment: {
           borderColor: (ctx: ScriptableLineSegmentContext) =>
-            ctx.p1.parsed.y >= 0 ? '#0ECB81' : '#F6465D',
+            (ctx.p1.parsed.y ?? 0) >= 0 ? '#0ECB81' : '#F6465D',
           backgroundColor: (ctx: ScriptableLineSegmentContext) =>
-            ctx.p1.parsed.y >= 0 ? 'rgba(14,203,129,0.15)' : 'rgba(246,70,93,0.15)',
+            (ctx.p1.parsed.y ?? 0) >= 0 ? 'rgba(14,203,129,0.15)' : 'rgba(246,70,93,0.15)',
         },
         borderColor: 'rgb(14, 203, 129)',
         backgroundColor: 'rgba(14, 203, 129, 0.15)',

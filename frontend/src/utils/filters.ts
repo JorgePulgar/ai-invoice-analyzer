@@ -7,18 +7,26 @@ export interface FilterState {
   periodo: PeriodoOption;
   tipo: TipoOption;
   cliente: string | null;
+  desde: string | null;
+  hasta: string | null;
 }
 
 export const DEFAULT_FILTERS: FilterState = {
   periodo: 'todos',
   tipo: 'todos',
   cliente: null,
+  desde: null,
+  hasta: null,
 };
+
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 export function parseFilters(params: URLSearchParams): FilterState {
   const periodo = params.get('periodo') as PeriodoOption | null;
   const tipo = params.get('tipo') as TipoOption | null;
   const cliente = params.get('cliente');
+  const desde = params.get('desde');
+  const hasta = params.get('hasta');
 
   const validPeriodo: PeriodoOption[] = ['todos', 'mes', 'trimestre', 'anio', 'anio12'];
   const validTipo: TipoOption[] = ['todos', 'ingreso', 'gasto'];
@@ -27,11 +35,19 @@ export function parseFilters(params: URLSearchParams): FilterState {
     periodo: validPeriodo.includes(periodo as PeriodoOption) ? (periodo as PeriodoOption) : 'todos',
     tipo: validTipo.includes(tipo as TipoOption) ? (tipo as TipoOption) : 'todos',
     cliente: cliente || null,
+    desde: desde && ISO_DATE_RE.test(desde) ? desde : null,
+    hasta: hasta && ISO_DATE_RE.test(hasta) ? hasta : null,
   };
 }
 
 export function isDefaultFilters(state: FilterState): boolean {
-  return state.periodo === 'todos' && state.tipo === 'todos' && state.cliente === null;
+  return (
+    state.periodo === 'todos' &&
+    state.tipo === 'todos' &&
+    state.cliente === null &&
+    state.desde === null &&
+    state.hasta === null
+  );
 }
 
 function getPeriodoWindow(option: PeriodoOption, today: Date): { desde: Date; hasta: Date } | null {
@@ -71,12 +87,23 @@ function getPeriodoWindow(option: PeriodoOption, today: Date): { desde: Date; ha
 export function applyFilters(facturas: Factura[], state: FilterState, today = new Date()): Factura[] {
   let result = facturas;
 
-  const window = getPeriodoWindow(state.periodo, today);
-  if (window) {
+  if (state.desde || state.hasta) {
+    const desde = state.desde ? new Date(state.desde) : null;
+    const hasta = state.hasta ? new Date(state.hasta) : null;
     result = result.filter((f) => {
       const d = new Date(f.fecha);
-      return d >= window.desde && d <= window.hasta;
+      if (desde && d < desde) return false;
+      if (hasta && d > hasta) return false;
+      return true;
     });
+  } else {
+    const window = getPeriodoWindow(state.periodo, today);
+    if (window) {
+      result = result.filter((f) => {
+        const d = new Date(f.fecha);
+        return d >= window.desde && d <= window.hasta;
+      });
+    }
   }
 
   if (state.tipo !== 'todos') {
