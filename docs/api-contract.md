@@ -339,6 +339,27 @@ Response 200 — `data`:
 - Ordered by `gastado` DESC.
 - Default limit: 10.
 
+#### `GET /api/analytics/ai-summary`
+
+Auth required. Returns a GPT-generated narrative summary of the user's overall financial situation. Result is cached per user for 24 hours to avoid redundant Azure calls.
+
+Response 200 — `data`:
+```json
+{
+  "summary": {
+    "narrative": "En los últimos 12 meses has generado €19,608 en ingresos con un margen neto del 95%. Tu IVA pendiente de declarar es €3,947. El cliente principal representa el 37% de tu facturación.",
+    "generated_at": "2026-05-02T10:00:00.000Z"
+  }
+}
+```
+
+If the user has no facturas, `data.summary` is `null`.
+
+Errors:
+- 502 — Azure AI Foundry error.
+
+Cache semantics: the narrative is regenerated when the cached value is older than 24 hours. Calling the endpoint multiple times within 24 hours returns the same `narrative` and `generated_at`.
+
 ---
 
 ## Extractor output (internal contract)

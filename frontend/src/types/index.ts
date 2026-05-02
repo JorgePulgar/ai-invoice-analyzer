@@ -73,4 +73,4 @@ export interface AiSummary {
   generated_at: string;
 }
 
-export type DraftFactura = Omit<Factura, 'id' | 'created_at'>;
+export type DraftFactura = Omit<Factura, 'id' | 'created_at'> & { id?: number };

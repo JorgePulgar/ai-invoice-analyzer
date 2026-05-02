@@ -209,8 +209,37 @@ Pre-requisite: Block 2.1 complete.
 
 **Block 2.4 closes with**: `git push origin dev-backend`. **End of Phase 2.** Open a PR from `dev-backend` to `main` summarising the phase.
 
-## Phase 3 — Stretch (high level)
+## Phase 3
+
+Pre-requisite: Phase 2 merged to `main`.
+
+### Block 3.1 — Dashboard AI summary endpoint
+
+- [ ] Add `ai_summary_cache` table to schema
+  - File: `src/db/schema.sql`. Columns: `user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE`, `narrative TEXT NOT NULL`, `generated_at TEXT NOT NULL`.
+  - Migration: add to `additiveMigrations` in both `src/db/init.js` and `src/db/database.js` (see LESSONS.md — SQLite `ALTER TABLE` quirk). Use `CREATE TABLE IF NOT EXISTS` for the new table.
+
+- [ ] Implement `GET /api/analytics/ai-summary`
+  - File: `src/routes/analytics.js`.
+  - If the user has no facturas, return `{ summary: null }`.
+  - Check `ai_summary_cache` for an entry with `user_id = req.user.id`. If one exists and `generated_at` is within 24 hours, return it immediately (cache hit — no Azure call).
+  - Otherwise: fetch `summary`, `monthly` (last 3 months), and `clients` (top 3) from `metrics.js`. Build a GPT-4o prompt that includes these numbers and requests a financial narrative ≤ 3 sentences in Spanish covering: total income/expense health, outstanding VAT, and main revenue concentration. Store the result in `ai_summary_cache` (upsert). Return `{ summary: { narrative, generated_at } }`.
+  - Errors: 502 on Azure failure (do not cache a failed result).
+
+- [ ] Wire `api.getAiSummary()` in the frontend
+  - File: `frontend/src/services/api.ts`
+  - Remove the TODO comment. Call `GET /api/analytics/ai-summary`. Return the `data.summary` value (can be `null`).
+
+- [ ] Smoke test for AI summary
+  - File: `scripts/smoke/ai-summary.js`.
+  - Seed a user with facturas. Call the endpoint; assert non-empty `narrative` string and valid ISO `generated_at`. Call again immediately; assert same `generated_at` (cache hit). Delete all facturas for the user; call the endpoint; assert `summary` is `null`.
+
+**Block 3.1 closes with**: `git push origin dev-backend`. **End of Phase 3.** Open a PR from `dev-backend` to `main` summarising the phase.
+
+---
+
+### Phase 4 — Stretch (high level)
 
 - Alerts: client dependency thresholds, VAT due-date reminders.
-- PDF dashboard export.
+- PDF dashboard export endpoint (optional — may be handled entirely client-side).
 - Landing page.
