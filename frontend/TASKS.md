@@ -416,7 +416,7 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
 
 ### Block 4.2 — Landing page
 
-- [ ] Create `LandingPage` component
+- [x] Create `LandingPage` component
   - File: `src/pages/LandingPage.tsx`
   - Public route (no `<ProtectedRoute>`). If already authenticated, redirect to `/dashboard`.
   - Sections (all text in Spanish):
@@ -425,7 +425,7 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
     3. Footer — minimal: copyright, link to `/login`.
   - Styling: full-width Tailwind layout consistent with the existing palette (`slate`, yellow accent).
 
-- [ ] Update routing in `App.tsx`
+- [x] Update routing in `App.tsx`
   - `/` → `<LandingPage>` (public, no auth guard).
   - Keep `/login` as the auth page.
   - Unauthenticated unknown paths → redirect to `/` instead of `/login`.

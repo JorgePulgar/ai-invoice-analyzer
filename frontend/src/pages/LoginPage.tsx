@@ -1,10 +1,12 @@
 import { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export function LoginPage() {
   const { isAuthed, login, register } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isDemo = searchParams.get('demo') === '1';
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,6 +48,15 @@ export function LoginPage() {
             Análisis financiero inteligente para autónomos y pymes
           </p>
         </div>
+
+        {/* Demo hint */}
+        {isDemo && (
+          <div className="bg-bn-card border border-bn-yellow/40 rounded-xl px-5 py-3 mb-4 text-sm text-bn-body">
+            <span className="font-semibold text-bn-yellow">Cuenta demo:</span>{' '}
+            <span className="font-mono">demo@invoice-insights.com</span> /{' '}
+            <span className="font-mono">demo1234</span>
+          </div>
+        )}
 
         {/* Card */}
         <div className="bg-bn-card rounded-xl p-8 border border-bn-hairline">
