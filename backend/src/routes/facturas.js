@@ -3,8 +3,11 @@ const fs = require('fs');
 const { authenticate } = require('../middleware/auth');
 const { upload } = require('../middleware/upload');
 const { extractFromPdf } = require('../services/extractor');
+const { generateSummary } = require('../services/summarizer');
 const { getDb } = require('../db/database');
 const { ok, fail } = require('../utils/response');
+const { validateFacturaFields } = require('../utils/validate');
+const { uploadLimiter } = require('../middleware/rateLimit');
 
 const router = express.Router();
 
@@ -15,7 +18,6 @@ router.use(authenticate);
 function multerUpload(req, res, next) {
   upload.single('file')(req, res, (err) => {
     if (!err) return next();
-    // Delete any partially-written file so the no-PDF-on-disk invariant holds.
     if (req.file) fs.unlink(req.file.path, () => {});
     if (err.code === 'LIMIT_FILE_SIZE') return fail(res, 'File too large', 413);
     if (err.message === 'Only PDF files are accepted') return fail(res, 'Only PDF files are accepted', 415);
@@ -24,8 +26,9 @@ function multerUpload(req, res, next) {
 }
 
 // POST /api/facturas/upload  (multipart/form-data, field: "file")
-// 201 → { success: true, data: <factura> }
-router.post('/upload', multerUpload, async (req, res, next) => {
+// Extracts invoice data and stores it as a pending draft for user review.
+// 201 → { success: true, data: { draft: <draft row> } }
+router.post('/upload', uploadLimiter, multerUpload, async (req, res, next) => {
   if (!req.file) return fail(res, 'No file uploaded', 400);
 
   const filePath = req.file.path;
@@ -39,33 +42,25 @@ router.post('/upload', multerUpload, async (req, res, next) => {
     }
 
     const db = getDb();
-    let row;
-    try {
-      row = db
-        .prepare(
-          `INSERT INTO facturas
-             (user_id, numero, fecha, emisor, receptor, concepto,
-              base_imponible, iva_porcentaje, iva_cantidad,
-              irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
-           VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
-           RETURNING *`
-        )
-        .get(
-          req.user.id, extracted.numero, extracted.fecha, extracted.emisor,
-          extracted.receptor, extracted.concepto, extracted.base_imponible,
-          extracted.iva_porcentaje, extracted.iva_cantidad, extracted.irpf_porcentaje,
-          extracted.irpf_cantidad, extracted.total, extracted.moneda, extracted.tipo
-        );
-    } catch (dbErr) {
-      if (dbErr.message.includes('UNIQUE constraint failed')) {
-        return fail(res, 'Invoice number already exists for this account', 409);
-      }
-      throw dbErr;
-    }
+    const row = db
+      .prepare(
+        `INSERT INTO facturas_draft
+           (user_id, numero, fecha, emisor, receptor, concepto,
+            base_imponible, iva_porcentaje, iva_cantidad,
+            irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+         RETURNING *`
+      )
+      .get(
+        req.user.id, extracted.numero, extracted.fecha, extracted.emisor,
+        extracted.receptor, extracted.concepto, extracted.base_imponible,
+        extracted.iva_porcentaje, extracted.iva_cantidad, extracted.irpf_porcentaje,
+        extracted.irpf_cantidad, extracted.total, extracted.moneda, extracted.tipo
+      );
 
-    const { user_id: _uid, updated_at: _upd, ...factura } = row;
-    factura.created_at = factura.created_at.replace(' ', 'T') + '.000Z';
-    return ok(res, factura, 201);
+    const { user_id: _uid, ...draft } = row;
+    draft.created_at = draft.created_at.replace(' ', 'T') + '.000Z';
+    return ok(res, { draft }, 201);
   } catch (err) {
     next(err);
   } finally {
@@ -73,10 +68,143 @@ router.post('/upload', multerUpload, async (req, res, next) => {
   }
 });
 
+// GET /api/facturas/drafts
+// Returns all pending drafts for the authenticated user, newest first.
+// 200 → { success: true, data: { drafts: [...] } }
+router.get('/drafts', async (req, res, next) => {
+  try {
+    const db = getDb();
+    const rows = db
+      .prepare(
+        `SELECT id, numero, fecha, emisor, receptor, concepto,
+                base_imponible, iva_porcentaje, iva_cantidad,
+                irpf_porcentaje, irpf_cantidad, total, moneda, tipo, status, created_at
+         FROM facturas_draft
+         WHERE user_id = ? AND status = 'pending'
+         ORDER BY id DESC`
+      )
+      .all(req.user.id);
+
+    const drafts = rows.map((r) => ({
+      ...r,
+      created_at: r.created_at.replace(' ', 'T') + '.000Z',
+    }));
+    return ok(res, { drafts });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/facturas/drafts/:id/confirm
+// Re-validates the submitted fields (user may have edited them), then atomically
+// inserts into facturas and deletes the draft.
+// 201 → { success: true, data: <promoted factura row> }
+router.post('/drafts/:id/confirm', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const draft = db
+      .prepare('SELECT * FROM facturas_draft WHERE id = ? AND user_id = ?')
+      .get(id, req.user.id);
+
+    if (!draft) return fail(res, 'Not found', 404);
+
+    // Merge draft defaults with any body overrides; coerce numeric strings.
+    const NUMERIC = ['base_imponible', 'iva_porcentaje', 'iva_cantidad',
+                     'irpf_porcentaje', 'irpf_cantidad', 'total'];
+    const body = { ...req.body };
+    for (const f of NUMERIC) {
+      if (body[f] !== undefined) body[f] = Number(body[f]);
+    }
+
+    try {
+      validateFacturaFields(body);
+    } catch (err) {
+      return fail(res, err.message, 400);
+    }
+
+    let factura;
+    try {
+      factura = db.transaction(() => {
+        const newRow = db
+          .prepare(
+            `INSERT INTO facturas
+               (user_id, numero, fecha, emisor, receptor, concepto,
+                base_imponible, iva_porcentaje, iva_cantidad,
+                irpf_porcentaje, irpf_cantidad, total, moneda, tipo)
+             VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+             RETURNING *`
+          )
+          .get(
+            req.user.id, body.numero, body.fecha, body.emisor,
+            body.receptor, body.concepto, body.base_imponible,
+            body.iva_porcentaje, body.iva_cantidad, body.irpf_porcentaje,
+            body.irpf_cantidad, body.total, body.moneda, body.tipo
+          );
+        db.prepare('DELETE FROM facturas_draft WHERE id = ?').run(id);
+        return newRow;
+      })();
+    } catch (dbErr) {
+      if (dbErr.message.includes('UNIQUE constraint failed')) {
+        return fail(res, 'Invoice number already exists for this account', 409);
+      }
+      throw dbErr;
+    }
+
+    const { user_id: _uid, updated_at: _upd, summary: _sum, ...cleanRow } = factura;
+    cleanRow.created_at = cleanRow.created_at.replace(' ', 'T') + '.000Z';
+    return ok(res, cleanRow, 201);
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/facturas/drafts/:id
+// Rejects (permanently deletes) a draft. Scoped to the authenticated user.
+// 200 → { success: true, data: { id } }
+router.delete('/drafts/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const result = db
+      .prepare('DELETE FROM facturas_draft WHERE id = ? AND user_id = ?')
+      .run(id, req.user.id);
+
+    if (result.changes === 0) return fail(res, 'Not found', 404);
+    return ok(res, { id });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // GET /api/facturas
+// Optional query params: tipo, cliente (substring on receptor),
+// proveedor (substring on emisor), importe_min.
 // 200 → { success: true, data: { facturas: [...] } }
 router.get('/', async (req, res, next) => {
   try {
+    const { tipo, cliente, proveedor, importe_min: impMin } = req.query;
+
+    if (tipo !== undefined && tipo !== 'ingreso' && tipo !== 'gasto') {
+      return fail(res, '"tipo" must be "ingreso" or "gasto"', 400);
+    }
+    const importe_min = impMin !== undefined ? Number(impMin) : undefined;
+    if (importe_min !== undefined && (!Number.isFinite(importe_min) || importe_min < 0)) {
+      return fail(res, '"importe_min" must be a non-negative number', 400);
+    }
+
+    const conditions = ['user_id = ?'];
+    const params = [req.user.id];
+
+    if (tipo)             { conditions.push('tipo = ?');        params.push(tipo); }
+    if (cliente)          { conditions.push('receptor LIKE ?'); params.push(`%${cliente}%`); }
+    if (proveedor)        { conditions.push('emisor LIKE ?');   params.push(`%${proveedor}%`); }
+    if (importe_min >= 0) { conditions.push('total >= ?');      params.push(importe_min); }
+
     const db = getDb();
     const rows = db
       .prepare(
@@ -84,10 +212,10 @@ router.get('/', async (req, res, next) => {
                 base_imponible, iva_porcentaje, iva_cantidad,
                 irpf_porcentaje, irpf_cantidad, total, moneda, tipo, created_at
          FROM facturas
-         WHERE user_id = ?
+         WHERE ${conditions.join(' AND ')}
          ORDER BY fecha DESC, id DESC`
       )
-      .all(req.user.id);
+      .all(...params);
 
     const facturas = rows.map((r) => ({
       ...r,
@@ -116,6 +244,39 @@ router.delete('/:id', async (req, res, next) => {
       return fail(res, 'Not found', 404);
     }
     return ok(res, { id });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/facturas/:id/summary
+// Returns a cached or freshly generated AI fiscal narrative.
+// 200 → { success: true, data: { summary: "..." } }
+router.post('/:id/summary', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) return fail(res, 'Not found', 404);
+
+    const db = getDb();
+    const factura = db
+      .prepare('SELECT * FROM facturas WHERE id = ? AND user_id = ?')
+      .get(id, req.user.id);
+
+    if (!factura) return fail(res, 'Not found', 404);
+
+    if (factura.summary) return ok(res, { summary: factura.summary });
+
+    let summary;
+    try {
+      summary = await generateSummary(factura);
+    } catch (err) {
+      if (err.isAzureError) return fail(res, err.message, 502);
+      return fail(res, err.message, 500);
+    }
+
+    db.prepare('UPDATE facturas SET summary = ? WHERE id = ?').run(summary, id);
+
+    return ok(res, { summary });
   } catch (err) {
     next(err);
   }

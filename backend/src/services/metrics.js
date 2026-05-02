@@ -5,9 +5,23 @@ function round2(n) {
   return Math.round(n * 100) / 100;
 }
 
+// Builds an optional " AND fecha >= ? AND fecha <= ?" clause from { desde, hasta }.
+function buildDateClause(opts = {}) {
+  const { desde, hasta } = opts;
+  const conditions = [];
+  const params = [];
+  if (desde) { conditions.push('fecha >= ?'); params.push(desde); }
+  if (hasta) { conditions.push('fecha <= ?'); params.push(hasta); }
+  return {
+    clause: conditions.length ? ' AND ' + conditions.join(' AND ') : '',
+    params,
+  };
+}
+
 // periodo strategy: actual MIN/MAX fecha from user data; falls back to current
 // fiscal year when there are no facturas.
-function getSummary(db, userId) {
+function getSummary(db, userId, opts = {}) {
+  const { clause, params } = buildDateClause(opts);
   const row = db
     .prepare(
       `SELECT
@@ -22,9 +36,9 @@ function getSummary(db, userId) {
          MIN(fecha) AS fecha_desde,
          MAX(fecha) AS fecha_hasta
        FROM facturas
-       WHERE user_id = ?`
+       WHERE user_id = ?${clause}`
     )
-    .get(userId);
+    .get(userId, ...params);
 
   const year = new Date().getFullYear();
   const desde = row.fecha_desde || `${year}-01-01`;
@@ -51,15 +65,42 @@ function getSummary(db, userId) {
   };
 }
 
-// Returns last 12 months (including current) with ingresos + gastos per month.
+// Returns months within the requested date range (up to 12, most recent) with
+// ingresos + gastos per month. Without a range: last 12 months including today.
 // Months with no data appear as { mes, ingresos: 0, gastos: 0 }.
-function getMonthly(db, userId) {
-  const months = [];
-  const now = new Date();
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+function getMonthly(db, userId, opts = {}) {
+  const { desde, hasta } = opts;
+  let months = [];
+
+  if (desde || hasta) {
+    const endDate = hasta
+      ? new Date(hasta.slice(0, 7) + '-01')
+      : new Date();
+    const startDate = desde
+      ? new Date(desde.slice(0, 7) + '-01')
+      : new Date(endDate.getFullYear(), endDate.getMonth() - 11, 1);
+
+    let cur = new Date(startDate);
+    while (cur <= endDate) {
+      months.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
+      cur.setMonth(cur.getMonth() + 1);
+    }
+    if (months.length > 12) months = months.slice(months.length - 12);
+  } else {
+    const now = new Date();
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+    }
   }
+
+  const { clause, params: dateParams } = buildDateClause(opts);
+
+  // When no explicit range, bound the SQL query to the generated month window.
+  const extraClause = (!desde && !hasta)
+    ? " AND strftime('%Y-%m', fecha) >= ?"
+    : '';
+  const extraParams = (!desde && !hasta) ? [months[0]] : [];
 
   const rows = db
     .prepare(
@@ -68,12 +109,11 @@ function getMonthly(db, userId) {
          SUM(CASE WHEN tipo='ingreso' THEN total ELSE 0 END) AS ingresos,
          SUM(CASE WHEN tipo='gasto'   THEN total ELSE 0 END) AS gastos
        FROM facturas
-       WHERE user_id = ?
-         AND strftime('%Y-%m', fecha) >= ?
+       WHERE user_id = ?${clause}${extraClause}
        GROUP BY mes
        ORDER BY mes`
     )
-    .all(userId, months[0]);
+    .all(userId, ...dateParams, ...extraParams);
 
   const byMes = Object.fromEntries(rows.map((r) => [r.mes, r]));
 
@@ -85,7 +125,8 @@ function getMonthly(db, userId) {
 }
 
 // Top clients by total amount invoiced (income only), descending.
-function getTopClients(db, userId, limit = 10) {
+function getTopClients(db, userId, limit = 10, opts = {}) {
+  const { clause, params } = buildDateClause(opts);
   return db
     .prepare(
       `SELECT
@@ -93,19 +134,39 @@ function getTopClients(db, userId, limit = 10) {
          SUM(total) AS facturado,
          COUNT(*) AS num_facturas
        FROM facturas
-       WHERE user_id = ? AND tipo = 'ingreso'
+       WHERE user_id = ? AND tipo = 'ingreso'${clause}
        GROUP BY receptor
        ORDER BY facturado DESC
        LIMIT ?`
     )
-    .all(userId, limit)
+    .all(userId, ...params, limit)
     .map((r) => ({ ...r, facturado: round2(r.facturado) }));
+}
+
+// Top suppliers by total amount spent (expenses only), descending.
+function getTopSuppliers(db, userId, limit = 10, opts = {}) {
+  const { clause, params } = buildDateClause(opts);
+  return db
+    .prepare(
+      `SELECT
+         emisor AS proveedor,
+         SUM(total) AS gastado,
+         COUNT(*) AS num_facturas
+       FROM facturas
+       WHERE user_id = ? AND tipo = 'gasto'${clause}
+       GROUP BY emisor
+       ORDER BY gastado DESC
+       LIMIT ?`
+    )
+    .all(userId, ...params, limit)
+    .map((r) => ({ ...r, gastado: round2(r.gastado) }));
 }
 
 // VAT breakdown for the 4 quarters of the current calendar year.
 // Empty quarters appear with zero values.
-function getVatBreakdown(db, userId) {
+function getVatBreakdown(db, userId, opts = {}) {
   const anio = new Date().getFullYear();
+  const { clause, params } = buildDateClause(opts);
 
   const rows = db
     .prepare(
@@ -119,10 +180,10 @@ function getVatBreakdown(db, userId) {
          SUM(CASE WHEN tipo='ingreso' THEN iva_cantidad ELSE 0 END) AS iva_repercutido,
          SUM(CASE WHEN tipo='gasto'   THEN iva_cantidad ELSE 0 END) AS iva_soportado
        FROM facturas
-       WHERE user_id = ? AND strftime('%Y', fecha) = ?
+       WHERE user_id = ? AND strftime('%Y', fecha) = ?${clause}
        GROUP BY trimestre`
     )
-    .all(userId, String(anio));
+    .all(userId, String(anio), ...params);
 
   const byQ = Object.fromEntries(rows.map((r) => [r.trimestre, r]));
 
@@ -139,4 +200,4 @@ function getVatBreakdown(db, userId) {
   });
 }
 
-module.exports = { getSummary, getMonthly, getTopClients, getVatBreakdown };
+module.exports = { getSummary, getMonthly, getTopClients, getTopSuppliers, getVatBreakdown };
