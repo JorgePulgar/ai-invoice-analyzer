@@ -368,19 +368,19 @@ Pre-requisite for all blocks: Phase 3 merged to `main`.
 
 ### Block 4.0 — Bug fixes & Spanish UI
 
-- [ ] Fix dashboard filter reload bug
+- [x] Fix dashboard filter reload bug
   - File: `src/pages/DashboardPage.tsx`
   - When a filter changes via `DashboardFilters`, the page does not re-derive or re-render dashboard data.
   - Diagnose: inspect the `useSearchParams` → `useEffect` dependency array. The effect that drives `applyFilters` / `deriveSummary` / `deriveMonthly` etc. must list the `FilterState` values (or the serialised search-params string) as dependencies so it re-runs on every filter change.
   - Expected behaviour: changing any filter (periodo, tipo, cliente) immediately updates KPIs, charts, and tables without a full page refresh or manual reload.
 
-- [ ] Fix card layout and visual distribution
+- [x] Fix card layout and visual distribution
   - Files: `src/pages/DashboardPage.tsx`, affected chart and card components.
   - Audit the KPI grid (7 cards), chart rows, and the two-column sections for broken spacing, overflow, or misaligned cards at common viewport widths (1280 px, 1440 px, and mobile 375 px).
   - Fix each issue in a separate commit; describe the specific symptom fixed in the commit body.
   - Pay special attention to: KPI grid wrapping at mid-widths, chart containers with hard-coded heights, `TopSuppliersList` / `TopClientsList` row alignment.
 
-- [ ] Translate all UI text to Spanish
+- [x] Translate all UI text to Spanish
   - Scope: every user-visible string — headings, labels, placeholder text, button text, error messages, empty-state messages, loading indicators, tooltip content.
   - Files: all `src/pages/*.tsx` and `src/components/*.tsx`.
   - Do NOT translate: code identifiers, console/log messages, `docs/` content. Field names (`numero`, `fecha`, etc.) are already Spanish — leave them.
