@@ -3,6 +3,7 @@ import type { TooltipItem } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import type { Factura } from '../types';
 import { formatCurrency } from '../utils/format';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -39,6 +40,7 @@ interface ExpenseCategoriesChartProps {
 }
 
 export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps) {
+  const cc = useChartColors();
   const gastos = facturas.filter((f) => f.tipo === 'gasto');
 
   if (gastos.length === 0) {
@@ -65,7 +67,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
       {
         data: values,
         backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderColor: '#1E2329',
+        borderColor: cc.doughnutBorder,
         borderWidth: 2,
       },
     ],
@@ -76,7 +78,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
     plugins: {
       legend: {
         position: 'bottom' as const,
-        labels: { color: '#EAECEF', font: { size: 11 }, boxWidth: 12, padding: 12 },
+        labels: { color: cc.legend, font: { size: 11 }, boxWidth: 12, padding: 12 },
       },
       tooltip: {
         callbacks: {

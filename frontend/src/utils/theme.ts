@@ -15,6 +15,7 @@ export function applyTheme(theme: Theme): void {
     document.documentElement.classList.remove('dark');
   }
   localStorage.setItem(STORAGE_KEY, theme);
+  window.dispatchEvent(new Event('themechange'));
 }
 
 export function toggleTheme(): Theme {

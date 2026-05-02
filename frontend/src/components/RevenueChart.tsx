@@ -3,6 +3,7 @@ import type { TooltipItem } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -21,6 +22,8 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ clients }: RevenueChartProps) {
+  const cc = useChartColors();
+
   if (clients.length === 0) {
     return (
       <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px]">
@@ -35,7 +38,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
       {
         data: clients.map((c) => c.facturado),
         backgroundColor: clients.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderColor: '#1E2329',
+        borderColor: cc.doughnutBorder,
         borderWidth: 2,
       },
     ],
@@ -46,7 +49,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
     plugins: {
       legend: {
         position: 'bottom' as const,
-        labels: { color: '#EAECEF', font: { size: 11 }, boxWidth: 12, padding: 12 },
+        labels: { color: cc.legend, font: { size: 11 }, boxWidth: 12, padding: 12 },
       },
       tooltip: {
         callbacks: {
