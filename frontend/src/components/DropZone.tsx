@@ -65,9 +65,9 @@ export function DropZone({ onFile, disabled = false }: DropZoneProps) {
 
       <div className="text-center">
         <p className="text-sm font-medium text-bn-body">
-          {isDragging ? 'Drop the file here' : 'Drag your PDF invoice here'}
+          {isDragging ? 'Suelta el archivo aquí' : 'Arrastra tu factura PDF aquí'}
         </p>
-        <p className="text-xs text-bn-muted mt-1">or</p>
+        <p className="text-xs text-bn-muted mt-1">o</p>
       </div>
 
       <button
@@ -79,10 +79,10 @@ export function DropZone({ onFile, disabled = false }: DropZoneProps) {
         }}
         className="text-sm font-semibold bg-bn-yellow text-bn-ink px-5 py-2 rounded hover:bg-bn-yellow-hover transition-colors disabled:bg-bn-yellow-dim disabled:text-bn-muted disabled:cursor-not-allowed"
       >
-        Select file
+        Seleccionar archivo
       </button>
 
-      <p className="text-xs text-bn-muted">PDF only · max 10 MB</p>
+      <p className="text-xs text-bn-muted">Solo PDF · máx. 10 MB</p>
     </div>
   );
 }
