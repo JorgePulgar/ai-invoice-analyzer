@@ -58,7 +58,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
         Ingresos por cliente
       </h3>

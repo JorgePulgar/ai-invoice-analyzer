@@ -195,7 +195,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6 mb-6">
         {kpis.map((kpi) => (
           <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} />
         ))}
@@ -211,17 +211,17 @@ export function DashboardPage() {
             <MonthlyChart data={monthly} forecast={!filtersActive} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <TopClientsList clients={clients} />
             <TopSuppliersList suppliers={suppliers} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <RevenueChart clients={clients} />
             <ExpenseCategoriesChart facturas={filteredFacturas} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
               <VatChart vat={vat} />
             </div>
@@ -232,7 +232,7 @@ export function DashboardPage() {
             <VatTable vat={vat} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CashFlowChart data={monthly} />
             <ProfitMarginChart data={monthly} />
           </div>

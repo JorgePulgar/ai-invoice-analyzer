@@ -465,12 +465,12 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
 
 ### Block 4.5 — Dark theme & visual polish
 
-- [ ] Implement dark mode toggle
+- [x] Implement dark mode toggle
   - Use Tailwind's `dark:` variant (`darkMode: 'class'` in `tailwind.config.js`).
   - Toggle adds/removes the `dark` class on `<html>`. Preference stored in `localStorage` under `ii_theme`.
   - Wire toggle button (sun/moon icon or text) in `Layout.tsx` top bar.
   - Apply `dark:` variants to all background, text, border, and chart colours across `DashboardPage`, `UploadPage`, and all components.
-- [ ] Visual polish pass
+- [x] Visual polish pass
   - Card hover: `shadow-md` → `shadow-lg` transition on chart cards.
   - KPI cards: subtle gradient top border using the yellow accent colour.
   - Consistent `gap-6` spacing between all dashboard rows.

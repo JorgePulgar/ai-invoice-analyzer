@@ -21,7 +21,7 @@ export function KpiCard({ label, value, tone = 'neutral', trend }: KpiCardProps)
   const glyph = toneGlyph[tone];
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline border-t-2 border-t-bn-yellow/40 hover:shadow-lg transition-shadow duration-200">
       <p className="text-xs font-medium text-bn-muted uppercase tracking-wide mb-2">{label}</p>
       <p className={`text-2xl font-bold flex items-center gap-1.5 ${toneClasses[tone]}`}>
         {glyph && <span className="text-base">{glyph}</span>}
