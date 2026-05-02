@@ -214,17 +214,17 @@ Pre-requisite for all blocks: Phase 2 merged to `main`.
 
 Pre-requisite: Block 3.1 complete.
 
-- [ ] Upgrade `MonthlyChart` to a combo chart with profit line
+- [x] Upgrade `MonthlyChart` to a combo chart with profit line
   - File: `src/components/MonthlyChart.tsx`
   - Add a third dataset **Beneficio Neto** (derived as `ingresos - gastos` per month), rendered as `type: 'line'` within a `type: 'bar'` chart (Chart.js mixed-chart pattern: set `type: 'line'` on the dataset object).
   - Style: `tension: 0.4`, `pointRadius: 3`, `borderColor` using the existing yellow token (`rgb(250, 204, 21)`). Y-axis shared with the bars.
   - Props interface unchanged: `{ data: MonthlyEntry[] }`. Derive `beneficio` inside the component.
 
-- [ ] Add `trend` prop to `KpiCard`
+- [x] Add `trend` prop to `KpiCard`
   - File: `src/components/KpiCard.tsx`
   - Add optional `trend?: { pct: number }` prop. When present, render a small subtitle below the value: `↑ +12%` (green) or `↓ -5%` (red). `pct >= 0` → up colour.
 
-- [ ] Derive and pass trend to Income and Expense KPI cards
+- [x] Derive and pass trend to Income and Expense KPI cards
   - File: `src/pages/DashboardPage.tsx`
   - Add a pure helper `calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number | null` in the same file: compare the sum of the last 3 monthly entries vs the 3 before that; return `null` if fewer than 6 entries.
   - Pass `trend` to the Income and Expenses KPI cards.
