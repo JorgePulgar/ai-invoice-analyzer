@@ -8,6 +8,10 @@ import { TopSuppliersList } from '../components/TopSuppliersList';
 import { RevenueChart } from '../components/RevenueChart';
 import { ExpenseCategoriesChart } from '../components/ExpenseCategoriesChart';
 import { VatTable } from '../components/VatTable';
+import { VatChart } from '../components/VatChart';
+import { IrpfWidget } from '../components/IrpfWidget';
+import { CashFlowChart } from '../components/CashFlowChart';
+import { ProfitMarginChart } from '../components/ProfitMarginChart';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
@@ -181,8 +185,20 @@ export function DashboardPage() {
             <ExpenseCategoriesChart facturas={filteredFacturas} />
           </div>
 
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <div className="lg:col-span-2">
+              <VatChart vat={vat} />
+            </div>
+            {summary && <IrpfWidget amount={summary.irpf_retenido} />}
+          </div>
+
           <div className="mb-6">
             <VatTable vat={vat} />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+            <CashFlowChart data={monthly} />
+            <ProfitMarginChart data={monthly} />
           </div>
         </>
       )}
