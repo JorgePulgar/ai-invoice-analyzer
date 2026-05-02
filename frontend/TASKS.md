@@ -237,16 +237,16 @@ Pre-requisite: Block 3.1 complete.
 
 Pre-requisite: Block 3.1 complete.
 
-- [ ] Create `TopSuppliersList` component
+- [x] Create `TopSuppliersList` component
   - File: `src/components/TopSuppliersList.tsx`
   - Props: `{ suppliers: SupplierEntry[] }`. Mirrors `TopClientsList` in structure and styling. Each row: supplier name — €X (N facturas). Header: "Top Proveedores".
 
-- [ ] Create `RevenueChart` component (doughnut)
+- [x] Create `RevenueChart` component (doughnut)
   - File: `src/components/RevenueChart.tsx`
   - Props: `{ clients: ClientEntry[] }`. Renders a `<Doughnut>` from `react-chartjs-2`. Register `ArcElement`, `Tooltip`, `Legend` inside this file.
   - Each segment is one client's `facturado`. Tooltip: `{cliente}: {formatCurrency(facturado)}`. Title: "Ingresos por cliente". If `clients` is empty, render a placeholder message.
 
-- [ ] Create `ExpenseCategoriesChart` component (doughnut)
+- [x] Create `ExpenseCategoriesChart` component (doughnut)
   - File: `src/components/ExpenseCategoriesChart.tsx`
   - Props: `{ facturas: Factura[] }`. Filters `tipo === 'gasto'`. Categorises by `concepto` via keyword matching (case-insensitive):
     - Software: adobe, notion, github, figma, slack, zoom, hosting, dominio, suscripci
@@ -258,7 +258,7 @@ Pre-requisite: Block 3.1 complete.
     - Otros: catch-all
   - Aggregates total spend per category, renders as `<Doughnut>`. Title: "Categorías de gasto". If no expenses, render a placeholder.
 
-- [ ] Wire into `DashboardPage`
+- [x] Wire into `DashboardPage`
   - Add `api.getSuppliers()` to the initial `Promise.all`. Store in `serverSuppliers` state; apply `deriveSuppliers` (simple filter on facturas) when filters are active (you will need to add `deriveSuppliers` to `src/utils/filters.ts`).
   - Layout change: replace the current `[TopClientsList | VatTable]` row with two rows:
     - Row A (2-col): `<TopClientsList>` | `<TopSuppliersList>`
