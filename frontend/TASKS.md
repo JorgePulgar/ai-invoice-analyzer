@@ -273,26 +273,26 @@ Pre-requisite: Block 3.1 complete.
 
 Pre-requisite: Block 3.1 complete.
 
-- [ ] Create `VatChart` component (grouped bar chart)
+- [x] Create `VatChart` component (grouped bar chart)
   - File: `src/components/VatChart.tsx`
   - Props: `{ vat: VatEntry[] }`. Renders a `<Bar>` with 3 grouped datasets: **IVA Repercutido**, **IVA Soportado**, **IVA a Pagar**. X-axis labels: `T1 2026`, etc. Do NOT use stacking (values would double-count).
   - Title: "IVA Trimestral".
 
-- [ ] Create `IrpfWidget` component
+- [x] Create `IrpfWidget` component
   - File: `src/components/IrpfWidget.tsx`
   - Props: `{ amount: number }`. Card with label "IRPF retenido por clientes", formatted amount, and a one-line sub-text "Tus clientes ya lo han ingresado a Hacienda en tu nombre". Yellow left-border accent. No chart needed.
 
-- [ ] Create `CashFlowChart` component (area line)
+- [x] Create `CashFlowChart` component (area line)
   - File: `src/components/CashFlowChart.tsx`
   - Props: `{ data: MonthlyEntry[] }`. Derives `cashFlow[i] = ingresos[i] - gastos[i]` per month. Renders `<Line>` with `fill: true`. Positive fill: `rgba(74,222,128,0.2)`, negative: `rgba(248,113,113,0.2)` — use a `segment` colouring callback or a single neutral fill if Chart.js segment colouring proves complex.
   - Title: "Flujo de caja mensual".
 
-- [ ] Create `ProfitMarginChart` component (line)
+- [x] Create `ProfitMarginChart` component (line)
   - File: `src/components/ProfitMarginChart.tsx`
   - Props: `{ data: MonthlyEntry[] }`. Derives `margin[i] = ingresos[i] > 0 ? ((ingresos[i] - gastos[i]) / ingresos[i]) * 100 : null`. Renders `<Line>`. Y-axis format: append `%`. Null gaps render as gaps in the line (Chart.js default).
   - Title: "Margen de beneficio mensual (%)".
 
-- [ ] Wire into `DashboardPage`
+- [x] Wire into `DashboardPage`
   - Add a VAT row: `<VatChart>` (left, 2/3 width) + `<IrpfWidget>` (right, 1/3 width) above `<VatTable>` (keep table — chart is the visual summary, table has exact numbers).
   - Add a 2-col row below the VAT section: `<CashFlowChart>` | `<ProfitMarginChart>`.
 
