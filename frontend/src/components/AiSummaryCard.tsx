@@ -13,11 +13,11 @@ export function AiSummaryCard({ summary, loading }: AiSummaryCardProps) {
     <div className="bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6">
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
-          ✨ Period Summary
+          ✨ Resumen del periodo
         </p>
         {summary && (
           <p className="text-xs text-bn-muted">
-            Generated on {formatDate(summary.generated_at)}
+            Generado el {formatDate(summary.generated_at)}
           </p>
         )}
       </div>

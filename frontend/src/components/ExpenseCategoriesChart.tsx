@@ -44,7 +44,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
   if (gastos.length === 0) {
     return (
       <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px]">
-        <p className="text-bn-muted text-sm">No expense data available.</p>
+        <p className="text-bn-muted text-sm">Sin datos de gastos.</p>
       </div>
     );
   }

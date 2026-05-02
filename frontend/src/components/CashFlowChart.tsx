@@ -26,7 +26,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
     labels: data.map((d) => d.mes),
     datasets: [
       {
-        label: 'Cash Flow',
+        label: 'Flujo de caja',
         data: cashFlow,
         fill: true,
         tension: 0.4,
@@ -51,7 +51,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
       tooltip: {
         callbacks: {
           label: (ctx: TooltipItem<'line'>) =>
-            `Cash Flow: ${formatCurrency(ctx.parsed.y ?? 0)}`,
+            `Flujo de caja: ${formatCurrency(ctx.parsed.y ?? 0)}`,
         },
       },
     },

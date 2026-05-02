@@ -37,7 +37,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const barDataset: ChartDataset<'bar'> = {
     type: 'bar',
-    label: 'Income',
+    label: 'Ingresos',
     data: displayData.map((d) => d.ingresos),
     backgroundColor: 'rgba(14, 203, 129, 0.65)',
     borderColor: '#0ECB81',
@@ -47,7 +47,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const expenseDataset: ChartDataset<'bar'> = {
     type: 'bar',
-    label: 'Expenses',
+    label: 'Gastos',
     data: displayData.map((d) => d.gastos),
     backgroundColor: 'rgba(246, 70, 93, 0.65)',
     borderColor: '#F6465D',
@@ -57,7 +57,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const profitDataset: ChartDataset<'line'> = {
     type: 'line',
-    label: 'Net Profit',
+    label: 'Beneficio neto',
     data: displayData.map((d) => d.ingresos - d.gastos),
     borderColor: 'rgb(252, 213, 53)',
     backgroundColor: 'rgba(252, 213, 53, 0.1)',
@@ -113,7 +113,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Monthly Overview
+        Evolución mensual
       </h3>
       <Chart type="bar" data={chartData} options={options} />
     </div>
