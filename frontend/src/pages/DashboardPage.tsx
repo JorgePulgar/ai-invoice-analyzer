@@ -9,7 +9,7 @@ import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
 import { api } from '../services/api';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatDate } from '../utils/format';
 import {
   parseFilters,
   isDefaultFilters,
@@ -119,6 +119,12 @@ export function DashboardPage() {
     <Layout>
       <AiSummaryCard summary={aiSummary} loading={false} />
       <DashboardFilters facturas={facturasOriginal} />
+
+      {summary && (
+        <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted mb-4">
+          Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
+        </p>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
         {kpis.map((kpi) => (
