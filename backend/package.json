@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/app.js",
     "dev": "nodemon src/app.js",
-    "init-db": "node src/db/init.js"
+    "init-db": "node src/db/init.js",
+    "seed:demo": "node scripts/seed-demo.js"
   },
   "engines": {
     "node": ">=20"
