@@ -75,7 +75,7 @@ export function DashboardPage() {
         setServerSuppliers(sup);
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Error loading data');
+        setError(err instanceof Error ? err.message : 'Error al cargar los datos');
       })
       .finally(() => setLoading(false));
   }, []);
@@ -86,7 +86,7 @@ export function DashboardPage() {
       const result = await api.listFacturas();
       setFacturasOriginal(result.facturas);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting invoice');
+      setError(err instanceof Error ? err.message : 'Error al eliminar la factura');
     }
   };
 
@@ -94,7 +94,7 @@ export function DashboardPage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-bn-muted">Loading…</p>
+          <p className="text-bn-muted">Cargando…</p>
         </div>
       </Layout>
     );
@@ -149,23 +149,23 @@ export function DashboardPage() {
   const kpis = summary
     ? [
         {
-          label: 'Total Income',
+          label: 'Ingresos totales',
           value: formatCurrency(summary.ingresos_totales),
           tone: 'up' as const,
           trend: ingresosTrend !== null ? { pct: ingresosTrend } : undefined,
         },
         {
-          label: 'Total Expenses',
+          label: 'Gastos totales',
           value: formatCurrency(summary.gastos_totales),
           tone: 'down' as const,
           trend: gastosTrend !== null ? { pct: gastosTrend } : undefined,
         },
         {
-          label: 'Net Profit',
+          label: 'Beneficio neto',
           value: formatCurrency(summary.beneficio_neto),
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
         },
-        { label: 'VAT Due', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
+        { label: 'IVA a pagar', value: formatCurrency(summary.iva_a_pagar), tone: 'neutral' as const },
         { label: 'IRPF Retenido', value: formatCurrency(summary.irpf_retenido), tone: 'neutral' as const },
         { label: 'Ticket Medio', value: formatCurrency(summary.ticket_medio), tone: 'neutral' as const },
         { label: 'Num. Facturas', value: String(summary.num_facturas), tone: 'neutral' as const },
@@ -191,7 +191,7 @@ export function DashboardPage() {
 
       {filteredFacturas.length === 0 && filtersActive ? (
         <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
-          <p className="text-bn-muted">No invoices match the selected filters.</p>
+          <p className="text-bn-muted">Ninguna factura coincide con los filtros seleccionados.</p>
         </div>
       ) : (
         <>
