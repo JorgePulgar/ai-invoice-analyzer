@@ -360,9 +360,119 @@ Pre-requisite: Block 3.2 complete.
 
 ---
 
-### Deferred to Phase 4
+## Phase 4 — Polish & Production Readiness
 
-- Alerts UI (client dependency thresholds, VAT due-date reminders).
-- "Export PDF / print" button on dashboard (`html2pdf` or browser print).
-- Landing page (replaces `/login` as the public entry point).
-- Dark theme polish (card shadows, hover animations, gradient accents) — low functional value relative to the above.
+Pre-requisite for all blocks: Phase 3 merged to `main`.
+
+---
+
+### Block 4.0 — Bug fixes & Spanish UI
+
+- [ ] Fix dashboard filter reload bug
+  - File: `src/pages/DashboardPage.tsx`
+  - When a filter changes via `DashboardFilters`, the page does not re-derive or re-render dashboard data.
+  - Diagnose: inspect the `useSearchParams` → `useEffect` dependency array. The effect that drives `applyFilters` / `deriveSummary` / `deriveMonthly` etc. must list the `FilterState` values (or the serialised search-params string) as dependencies so it re-runs on every filter change.
+  - Expected behaviour: changing any filter (periodo, tipo, cliente) immediately updates KPIs, charts, and tables without a full page refresh or manual reload.
+
+- [ ] Fix card layout and visual distribution
+  - Files: `src/pages/DashboardPage.tsx`, affected chart and card components.
+  - Audit the KPI grid (7 cards), chart rows, and the two-column sections for broken spacing, overflow, or misaligned cards at common viewport widths (1280 px, 1440 px, and mobile 375 px).
+  - Fix each issue in a separate commit; describe the specific symptom fixed in the commit body.
+  - Pay special attention to: KPI grid wrapping at mid-widths, chart containers with hard-coded heights, `TopSuppliersList` / `TopClientsList` row alignment.
+
+- [ ] Translate all UI text to Spanish
+  - Scope: every user-visible string — headings, labels, placeholder text, button text, error messages, empty-state messages, loading indicators, tooltip content.
+  - Files: all `src/pages/*.tsx` and `src/components/*.tsx`.
+  - Do NOT translate: code identifiers, console/log messages, `docs/` content. Field names (`numero`, `fecha`, etc.) are already Spanish — leave them.
+  - Commit per logical group (e.g., one commit for `DashboardPage` + KPI labels, one for upload flow, one for auth forms).
+
+**Block 4.0 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 4.1 — Demo seed data
+
+Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
+
+> The seed script itself lives in `backend/` and is tracked in `backend/TASKS.md`. This block covers the frontend verification step only.
+
+- [ ] Verify demo dashboard renders well with seed data
+  - Log in as the demo account (`demo@invoice-insights.com` / `demo1234` — credentials set by the backend seed script).
+  - Walk through every dashboard section:
+    - KPI row: all 7 cards populated with non-zero values.
+    - MonthlyChart: combo bar+line renders across ≥ 6 months with visible profit line.
+    - TopClientsList and TopSuppliersList: at least 3 entries each.
+    - RevenueChart and ExpenseCategoriesChart doughnuts: multiple segments, no "sin datos" placeholder.
+    - VatChart: at least 2 quarters with non-zero bars.
+    - IrpfWidget: non-zero amount.
+    - CashFlowChart and ProfitMarginChart: smooth curves across ≥ 6 months.
+    - InsightsPanel: at least 2 insights fired.
+    - InvoiceHeatmap: activity visible across multiple months.
+  - File: `scripts/smoke/demo-seed.md` — manual checklist with pass/fail per section, committed.
+
+**Block 4.1 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 4.2 — Landing page
+
+- [ ] Create `LandingPage` component
+  - File: `src/pages/LandingPage.tsx`
+  - Public route (no `<ProtectedRoute>`). If already authenticated, redirect to `/dashboard`.
+  - Sections (all text in Spanish):
+    1. Hero — product name "Invoice Insights", one-line pitch, two CTAs: "Empezar gratis" → `/login` (register tab) and "Ver demo" → `/dashboard` (links to demo account or just dashboard).
+    2. Features — 4 cards: extracción PDF con IA, dashboard financiero, resumen fiscal (IVA / IRPF), insights automáticos.
+    3. Footer — minimal: copyright, link to `/login`.
+  - Styling: full-width Tailwind layout consistent with the existing palette (`slate`, yellow accent).
+
+- [ ] Update routing in `App.tsx`
+  - `/` → `<LandingPage>` (public, no auth guard).
+  - Keep `/login` as the auth page.
+  - Unauthenticated unknown paths → redirect to `/` instead of `/login`.
+
+**Block 4.2 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 4.3 — Alerts banner
+
+- [ ] Create `AlertsBanner` component
+  - File: `src/components/AlertsBanner.tsx`
+  - Props: `{ summary: Summary; vat: VatEntry[] }`. All logic is client-side — no new endpoint.
+  - Derives up to 3 alert types:
+    1. **Concentración de cliente** — emit if `(clients[0].facturado / summary.ingresos_totales) > 0.5`. Message: "Tu cliente principal representa más del 50 % de tus ingresos. Considera diversificar."
+    2. **IVA próximo a vencer** — emit if today is within 15 days before the end of a quarter (Mar 31, Jun 30, Sep 30, Dec 31) and `iva_a_pagar > 0` for that quarter. Message: "El plazo de declaración del IVA del TN vence en X días. IVA a pagar: €Y."
+    3. **IRPF anual** — emit in December if `summary.irpf_retenido > 0`. Message: "Tus clientes han retenido €X de IRPF este año."
+  - Each alert is a dismissible pill; dismissed state stored in `localStorage` under key `ii_dismissed_<alertKey>`.
+  - Render at the top of `DashboardPage`, above `<DashboardFilters>`.
+
+**Block 4.3 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 4.4 — Export / print
+
+- [ ] Add "Exportar PDF" button to dashboard header
+  - Use `window.print()` with a `@media print` stylesheet in `src/index.css`:
+    - Hide nav, filters bar, action buttons, and `AlertsBanner` in print view.
+    - Expand chart containers to full width in print.
+  - If `window.print()` produces unacceptable layout (charts clipped, colours lost), document the specific failure in `docs/LESSONS.md` and propose a library (`html2canvas` + `jsPDF`) before adding it.
+  - Button text: "Exportar PDF". Place in `DashboardPage` header row alongside the period badge.
+
+**Block 4.4 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 4.5 — Dark theme & visual polish
+
+- [ ] Implement dark mode toggle
+  - Use Tailwind's `dark:` variant (`darkMode: 'class'` in `tailwind.config.js`).
+  - Toggle adds/removes the `dark` class on `<html>`. Preference stored in `localStorage` under `ii_theme`.
+  - Wire toggle button (sun/moon icon or text) in `Layout.tsx` top bar.
+  - Apply `dark:` variants to all background, text, border, and chart colours across `DashboardPage`, `UploadPage`, and all components.
+- [ ] Visual polish pass
+  - Card hover: `shadow-md` → `shadow-lg` transition on chart cards.
+  - KPI cards: subtle gradient top border using the yellow accent colour.
+  - Consistent `gap-6` spacing between all dashboard rows.
+
+**Block 4.5 closes with**: `git push origin dev-frontend`. **End of Phase 4.** Open a PR from `dev-frontend` to `main` summarising the phase.
