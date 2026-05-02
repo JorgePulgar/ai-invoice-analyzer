@@ -13,6 +13,7 @@ import type {
   Factura,
   MonthlyEntry,
   Summary,
+  SupplierEntry,
   VatEntry,
 } from '../types';
 
@@ -28,6 +29,7 @@ interface MockData {
   clients: ClientEntry[];
   vat: VatEntry[];
   aiSummary: AiSummary;
+  suppliers: SupplierEntry[];
 }
 
 let mockCache: MockData | null = null;
@@ -160,6 +162,12 @@ export const api = {
     // TODO(phase-2-backend): wire to GET /api/analytics/ai-summary once the
     // contract addendum is approved and Jorge ships the endpoint.
     return null;
+  },
+
+  async getSuppliers(): Promise<SupplierEntry[]> {
+    if (USE_MOCK) return (await loadMock()).suppliers;
+    const { suppliers } = await request<{ suppliers: SupplierEntry[] }>('GET', '/analytics/suppliers');
+    return suppliers;
   },
 
   // --- Phase 2 upload (extract → review → confirm) ---

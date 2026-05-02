@@ -60,6 +60,12 @@ export interface ClientEntry {
   num_facturas: number;
 }
 
+export interface SupplierEntry {
+  proveedor: string;
+  gastado: number;
+  num_facturas: number;
+}
+
 export interface VatEntry {
   trimestre: string;
   anio: number;
