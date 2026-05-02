@@ -25,6 +25,7 @@ export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
       <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
         Actividad de facturación
       </h3>
+      <div className="overflow-x-auto">
       <CalendarHeatmap
         startDate={startDate}
         endDate={endDate}
@@ -43,6 +44,7 @@ export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
         }}
         showWeekdayLabels
       />
+      </div>
     </div>
   );
 }
