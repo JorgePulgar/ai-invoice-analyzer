@@ -81,38 +81,9 @@ export function DashboardPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleDelete = async (id: number) => {
-    try {
-      await api.deleteFactura(id);
-      const result = await api.listFacturas();
-      setFacturasOriginal(result.facturas);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar la factura');
-    }
-  };
-
-  if (loading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-bn-muted">Cargando…</p>
-        </div>
-      </Layout>
-    );
-  }
-
-  if (error) {
-    return (
-      <Layout>
-        <p className="text-bn-down mt-4">{error}</p>
-      </Layout>
-    );
-  }
-
   // Filters are URL-driven. Derived analytics are memoised against the serialised
-  // search-params string so any URL change reliably triggers a recompute. Without
-  // this, child components could see stale derived data when only filter values
-  // (not facturas) change between renders.
+  // search-params string so any URL change reliably triggers a recompute.
+  // All useMemo calls must be before any conditional return (Rules of Hooks).
   const paramsKey = searchParams.toString();
   const filterState = useMemo(() => parseFilters(searchParams), [paramsKey, searchParams]);
   const filtersActive = useMemo(() => !isDefaultFilters(filterState), [filterState]);
@@ -142,6 +113,34 @@ export function DashboardPage() {
     () => (filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers),
     [filtersActive, filteredFacturas, serverSuppliers],
   );
+
+  const handleDelete = async (id: number) => {
+    try {
+      await api.deleteFactura(id);
+      const result = await api.listFacturas();
+      setFacturasOriginal(result.facturas);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error al eliminar la factura');
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <p className="text-bn-muted">Cargando…</p>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <p className="text-bn-down mt-4">{error}</p>
+      </Layout>
+    );
+  }
 
   const ingresosTrend = calcTrend(monthly, 'ingresos');
   const gastosTrend = calcTrend(monthly, 'gastos');
