@@ -249,7 +249,7 @@ Pre-requisite for all blocks: Phase 3 merged to `main`.
 
 ### Block 4.1 — Demo seed data
 
-- [ ] Create demo seed script
+- [x] Create demo seed script
   - File: `scripts/seed-demo.js`
   - Creates a demo user (`demo@invoice-insights.com` / `demo1234`) if one does not already exist. Idempotent — safe to run multiple times without creating duplicate rows.
   - Inserts ~25–30 realistic Spanish invoices spread across the last 12 months:
@@ -262,7 +262,7 @@ Pre-requisite for all blocks: Phase 3 merged to `main`.
   - Script inserts rows directly into SQLite via `better-sqlite3` — do NOT call the upload endpoint or the extractor (avoids Azure calls during seeding).
   - Add `"seed:demo": "node scripts/seed-demo.js"` to `package.json`.
 
-- [ ] Smoke test for seed data
+- [x] Smoke test for seed data
   - Run `npm run seed:demo` twice; assert idempotency (no duplicate rows, no error on second run).
   - Run the analytics smoke script against the demo account; assert all 4 endpoints (`summary`, `monthly`, `clients`, `vat`) return non-empty, non-zero data.
   - Capture both run outputs in the commit body.
@@ -300,20 +300,20 @@ Pre-requisite: Block 4.1 complete.
 
 Pre-requisite: Phase 3 merged to `main`.
 
-- [ ] Add HTTP security headers via `helmet`
+- [x] Add HTTP security headers via `helmet`
   - Install `helmet` (justification: sets 11 security-relevant response headers in one call; equivalent manual work would be verbose and drift-prone).
   - Wire `app.use(helmet())` in `src/app.js` before any route or middleware.
 
-- [ ] Tighten CORS for production
+- [x] Tighten CORS for production
   - If `NODE_ENV === 'production'` and `CORS_ORIGIN` is `*` or unset, crash at startup with a clear error message. Document the required value in `.env.example`.
   - Confirm `CORS_ORIGIN` accepts a comma-separated list so multiple origins (e.g., `https://app.example.com,https://www.example.com`) work without code changes.
 
-- [ ] Add global rate limiter
+- [x] Add global rate limiter
   - Extend `express-rate-limit` (already installed) with a general limiter: 100 requests / 15 minutes per IP, applied to all routes before the router mounts.
   - Upload-specific limiter (10 req / 60 s per user) stays as-is.
   - Env var: `GENERAL_RATE_LIMIT_MAX` (default 100). Document in `.env.example`.
 
-- [ ] Smoke test for security headers
+- [x] Smoke test for security headers
   - File: `scripts/smoke/security.js`.
   - Hit `GET /api/health`; assert response includes `x-content-type-options`, `x-frame-options`, and `x-xss-protection` headers.
   - Capture output in the commit body.
