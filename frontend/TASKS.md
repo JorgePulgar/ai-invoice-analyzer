@@ -306,7 +306,7 @@ Pre-requisite: Blocks 3.2 and 3.3 complete.
 
 > All insights are derived from data already in memory. Do NOT call any AI API for this feature.
 
-- [ ] Create `src/utils/insights.ts`
+- [x] Create `src/utils/insights.ts`
   - Export `deriveInsights(summary: Summary, monthly: MonthlyEntry[], clients: ClientEntry[], suppliers: SupplierEntry[]): string[]`.
   - Return up to 5 non-empty insight strings. Rules:
     1. **Revenue trend** — compare last month `ingresos` vs month before; emit if `|pct| >= 5`. Example: "Tus ingresos subieron un 12% este mes."
@@ -316,16 +316,16 @@ Pre-requisite: Blocks 3.2 and 3.3 complete.
     5. **IRPF notice** — emit if `summary.irpf_retenido > 0`. Example: "Tus clientes ya han retenido €X de IRPF en tu nombre."
   - Return `[]` when data is empty or thresholds are not met.
 
-- [ ] Create `InsightsPanel` component
+- [x] Create `InsightsPanel` component
   - File: `src/components/InsightsPanel.tsx`
   - Props: `{ insights: string[] }`. Return `null` when array is empty.
   - Card with header "Análisis automático", yellow left-border accent, and a styled `<ul>` where each item has a `→` glyph.
 
-- [ ] Add unit tests for `insights.ts`
+- [x] Add unit tests for `insights.ts`
   - File: `tests/utils/insights.test.ts`
   - Cover: empty data → empty array; concentration above and below threshold; VAT alert on/off; revenue change sign.
 
-- [ ] Wire into `DashboardPage`
+- [x] Wire into `DashboardPage`
   - Derive `insights` inline (pure call, no effect): `const insights = deriveInsights(summary, monthly, clients, suppliers)`.
   - Render `<InsightsPanel>` above `<FacturasTable>`, below the cash-flow section.
 
