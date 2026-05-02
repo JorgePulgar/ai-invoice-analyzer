@@ -12,6 +12,8 @@ import { VatChart } from '../components/VatChart';
 import { IrpfWidget } from '../components/IrpfWidget';
 import { CashFlowChart } from '../components/CashFlowChart';
 import { ProfitMarginChart } from '../components/ProfitMarginChart';
+import { InsightsPanel } from '../components/InsightsPanel';
+import { deriveInsights } from '../utils/insights';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
@@ -121,6 +123,7 @@ export function DashboardPage() {
 
   const ingresosTrend = calcTrend(monthly, 'ingresos');
   const gastosTrend = calcTrend(monthly, 'gastos');
+  const insights = summary ? deriveInsights(summary, monthly, clients, suppliers) : [];
 
   const kpis = summary
     ? [
@@ -200,6 +203,8 @@ export function DashboardPage() {
             <CashFlowChart data={monthly} />
             <ProfitMarginChart data={monthly} />
           </div>
+
+          <InsightsPanel insights={insights} />
         </>
       )}
 
