@@ -215,24 +215,27 @@ Pre-requisite: Phase 2 merged to `main`.
 
 ### Block 3.1 — Dashboard AI summary endpoint
 
-- [ ] Add `ai_summary_cache` table to schema
+- [x] Add `ai_summary_cache` table to schema
   - File: `src/db/schema.sql`. Columns: `user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE`, `narrative TEXT NOT NULL`, `generated_at TEXT NOT NULL`.
-  - Migration: add to `additiveMigrations` in both `src/db/init.js` and `src/db/database.js` (see LESSONS.md — SQLite `ALTER TABLE` quirk). Use `CREATE TABLE IF NOT EXISTS` for the new table.
+  - Migration: `CREATE TABLE IF NOT EXISTS` in schema.sql is sufficient — `database.js` applies the full schema on every DB open, so the new table is created automatically on existing DBs. No `ALTER TABLE` needed (new table, not a column addition).
 
-- [ ] Implement `GET /api/analytics/ai-summary`
+- [x] Implement `GET /api/analytics/ai-summary`
   - File: `src/routes/analytics.js`.
   - If the user has no facturas, return `{ summary: null }`.
   - Check `ai_summary_cache` for an entry with `user_id = req.user.id`. If one exists and `generated_at` is within 24 hours, return it immediately (cache hit — no Azure call).
   - Otherwise: fetch `summary`, `monthly` (last 3 months), and `clients` (top 3) from `metrics.js`. Build a GPT-4o prompt that includes these numbers and requests a financial narrative ≤ 3 sentences in Spanish covering: total income/expense health, outstanding VAT, and main revenue concentration. Store the result in `ai_summary_cache` (upsert). Return `{ summary: { narrative, generated_at } }`.
   - Errors: 502 on Azure failure (do not cache a failed result).
+  - Azure call extracted to `src/services/dashboardSummary.js` (mirrors summarizer.js pattern).
 
 - [ ] Wire `api.getAiSummary()` in the frontend
   - File: `frontend/src/services/api.ts`
   - Remove the TODO comment. Call `GET /api/analytics/ai-summary`. Return the `data.summary` value (can be `null`).
+  - **Frontend task — to be done by the frontend developer on `dev-frontend`.**
 
-- [ ] Smoke test for AI summary
+- [x] Smoke test for AI summary
   - File: `scripts/smoke/ai-summary.js`.
   - Seed a user with facturas. Call the endpoint; assert non-empty `narrative` string and valid ISO `generated_at`. Call again immediately; assert same `generated_at` (cache hit). Delete all facturas for the user; call the endpoint; assert `summary` is `null`.
+  - Requires Azure credentials and a running backend server to execute.
 
 **Block 3.1 closes with**: `git push origin dev-backend`. **End of Phase 3.** Open a PR from `dev-backend` to `main` summarising the phase.
 
