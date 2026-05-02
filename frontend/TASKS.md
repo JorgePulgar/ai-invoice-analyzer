@@ -179,8 +179,190 @@ All blocks (2.1–2.4) implemented and tested. Ready to merge to main.
 
 ---
 
-## Phase 3 — Stretch (high level)
+## Phase 3 — Dashboard Enhancement
 
-- Alerts UI (client dependency, VAT due dates).
-- "Export PDF" button on dashboard (browser print or `html2pdf`).
-- Landing page (replaces `/login` as the public entry; login moves to `/login` keeping current behaviour).
+Pre-requisite for all blocks: Phase 2 merged to `main`.
+
+---
+
+### Block 3.1 — KPI expansion + period badge + post-upload navigation
+
+- [ ] Add `SupplierEntry` type and `api.getSuppliers()` method
+  - File: `src/types/index.ts` — add `SupplierEntry { proveedor: string; gastado: number; num_facturas: number }`.
+  - File: `src/services/api.ts` — add `getSuppliers()` calling `GET /api/analytics/suppliers`. Under `USE_MOCK`, return `mockData.suppliers`.
+  - File: `public/mock/data.json` — add a `suppliers` array with 3–5 entries.
+
+- [ ] Expand KPI row to 7 cards
+  - File: `src/pages/DashboardPage.tsx`
+  - Add to the `kpis` array: **IRPF Retenido** (`summary.irpf_retenido`, `formatCurrency`, tone `neutral`), **Ticket Medio** (`summary.ticket_medio`, `formatCurrency`, tone `neutral`), **Num. Facturas** (`String(summary.num_facturas)`, tone `neutral`).
+  - Update the responsive grid: `grid-cols-2 sm:grid-cols-4 xl:grid-cols-7` or two rows — use good judgement for readability.
+
+- [ ] Add period badge above KPI row
+  - File: `src/pages/DashboardPage.tsx`
+  - Render a small pill between `<DashboardFilters>` and the KPI grid showing `summary.periodo.desde` → `summary.periodo.hasta`, formatted with `formatDate`. Example: "Analizando: ene 2025 → dic 2025".
+  - No new component needed; inline Tailwind pill is sufficient.
+
+- [ ] Add "Ir al dashboard" link after successful upload
+  - File: `src/pages/UploadPage.tsx`
+  - When `status === 'success'`, render a `<Link to="/dashboard">` button below the result card. Use `react-router-dom`'s `Link`.
+
+**Block 3.1 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 3.2 — Combo chart + KPI trend indicators
+
+Pre-requisite: Block 3.1 complete.
+
+- [ ] Upgrade `MonthlyChart` to a combo chart with profit line
+  - File: `src/components/MonthlyChart.tsx`
+  - Add a third dataset **Beneficio Neto** (derived as `ingresos - gastos` per month), rendered as `type: 'line'` within a `type: 'bar'` chart (Chart.js mixed-chart pattern: set `type: 'line'` on the dataset object).
+  - Style: `tension: 0.4`, `pointRadius: 3`, `borderColor` using the existing yellow token (`rgb(250, 204, 21)`). Y-axis shared with the bars.
+  - Props interface unchanged: `{ data: MonthlyEntry[] }`. Derive `beneficio` inside the component.
+
+- [ ] Add `trend` prop to `KpiCard`
+  - File: `src/components/KpiCard.tsx`
+  - Add optional `trend?: { pct: number }` prop. When present, render a small subtitle below the value: `↑ +12%` (green) or `↓ -5%` (red). `pct >= 0` → up colour.
+
+- [ ] Derive and pass trend to Income and Expense KPI cards
+  - File: `src/pages/DashboardPage.tsx`
+  - Add a pure helper `calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number | null` in the same file: compare the sum of the last 3 monthly entries vs the 3 before that; return `null` if fewer than 6 entries.
+  - Pass `trend` to the Income and Expenses KPI cards.
+
+**Block 3.2 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 3.3 — New sections: suppliers, revenue distribution, expense categories
+
+Pre-requisite: Block 3.1 complete.
+
+- [ ] Create `TopSuppliersList` component
+  - File: `src/components/TopSuppliersList.tsx`
+  - Props: `{ suppliers: SupplierEntry[] }`. Mirrors `TopClientsList` in structure and styling. Each row: supplier name — €X (N facturas). Header: "Top Proveedores".
+
+- [ ] Create `RevenueChart` component (doughnut)
+  - File: `src/components/RevenueChart.tsx`
+  - Props: `{ clients: ClientEntry[] }`. Renders a `<Doughnut>` from `react-chartjs-2`. Register `ArcElement`, `Tooltip`, `Legend` inside this file.
+  - Each segment is one client's `facturado`. Tooltip: `{cliente}: {formatCurrency(facturado)}`. Title: "Ingresos por cliente". If `clients` is empty, render a placeholder message.
+
+- [ ] Create `ExpenseCategoriesChart` component (doughnut)
+  - File: `src/components/ExpenseCategoriesChart.tsx`
+  - Props: `{ facturas: Factura[] }`. Filters `tipo === 'gasto'`. Categorises by `concepto` via keyword matching (case-insensitive):
+    - Software: adobe, notion, github, figma, slack, zoom, hosting, dominio, suscripci
+    - Transporte: taxi, uber, renfe, vuelo, gasolina, parking, transporte
+    - Marketing: publicidad, ads, marketing, diseño, contenido
+    - Equipamiento: ordenador, portátil, monitor, impresora, hardware
+    - Oficina: material, papelería, alquiler, suministros, electricidad, internet
+    - Gestoría: gestor, asesor, contabilidad, notario, impuesto, tributo
+    - Otros: catch-all
+  - Aggregates total spend per category, renders as `<Doughnut>`. Title: "Categorías de gasto". If no expenses, render a placeholder.
+
+- [ ] Wire into `DashboardPage`
+  - Add `api.getSuppliers()` to the initial `Promise.all`. Store in `serverSuppliers` state; apply `deriveSuppliers` (simple filter on facturas) when filters are active (you will need to add `deriveSuppliers` to `src/utils/filters.ts`).
+  - Layout change: replace the current `[TopClientsList | VatTable]` row with two rows:
+    - Row A (2-col): `<TopClientsList>` | `<TopSuppliersList>`
+    - Row B (2-col): `<RevenueChart>` | `<ExpenseCategoriesChart>`
+  - Move `<VatTable>` to Block 3.4.
+
+**Block 3.3 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 3.4 — Tax section upgrade + cash flow + profit margin charts
+
+Pre-requisite: Block 3.1 complete.
+
+- [ ] Create `VatChart` component (grouped bar chart)
+  - File: `src/components/VatChart.tsx`
+  - Props: `{ vat: VatEntry[] }`. Renders a `<Bar>` with 3 grouped datasets: **IVA Repercutido**, **IVA Soportado**, **IVA a Pagar**. X-axis labels: `T1 2026`, etc. Do NOT use stacking (values would double-count).
+  - Title: "IVA Trimestral".
+
+- [ ] Create `IrpfWidget` component
+  - File: `src/components/IrpfWidget.tsx`
+  - Props: `{ amount: number }`. Card with label "IRPF retenido por clientes", formatted amount, and a one-line sub-text "Tus clientes ya lo han ingresado a Hacienda en tu nombre". Yellow left-border accent. No chart needed.
+
+- [ ] Create `CashFlowChart` component (area line)
+  - File: `src/components/CashFlowChart.tsx`
+  - Props: `{ data: MonthlyEntry[] }`. Derives `cashFlow[i] = ingresos[i] - gastos[i]` per month. Renders `<Line>` with `fill: true`. Positive fill: `rgba(74,222,128,0.2)`, negative: `rgba(248,113,113,0.2)` — use a `segment` colouring callback or a single neutral fill if Chart.js segment colouring proves complex.
+  - Title: "Flujo de caja mensual".
+
+- [ ] Create `ProfitMarginChart` component (line)
+  - File: `src/components/ProfitMarginChart.tsx`
+  - Props: `{ data: MonthlyEntry[] }`. Derives `margin[i] = ingresos[i] > 0 ? ((ingresos[i] - gastos[i]) / ingresos[i]) * 100 : null`. Renders `<Line>`. Y-axis format: append `%`. Null gaps render as gaps in the line (Chart.js default).
+  - Title: "Margen de beneficio mensual (%)".
+
+- [ ] Wire into `DashboardPage`
+  - Add a VAT row: `<VatChart>` (left, 2/3 width) + `<IrpfWidget>` (right, 1/3 width) above `<VatTable>` (keep table — chart is the visual summary, table has exact numbers).
+  - Add a 2-col row below the VAT section: `<CashFlowChart>` | `<ProfitMarginChart>`.
+
+**Block 3.4 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 3.5 — Rule-based AI Insights panel
+
+Pre-requisite: Blocks 3.2 and 3.3 complete.
+
+> All insights are derived from data already in memory. Do NOT call any AI API for this feature.
+
+- [ ] Create `src/utils/insights.ts`
+  - Export `deriveInsights(summary: Summary, monthly: MonthlyEntry[], clients: ClientEntry[], suppliers: SupplierEntry[]): string[]`.
+  - Return up to 5 non-empty insight strings. Rules:
+    1. **Revenue trend** — compare last month `ingresos` vs month before; emit if `|pct| >= 5`. Example: "Tus ingresos subieron un 12% este mes."
+    2. **Expense trend** — same for `gastos`. Example: "Tus gastos bajaron un 8% este mes."
+    3. **Client concentration** — `(clients[0].facturado / summary.ingresos_totales) * 100`; emit if `> 35`. Example: "El cliente principal representa el 41% de tus ingresos."
+    4. **VAT alert** — emit if `summary.iva_a_pagar > 0`. Example: "Tienes €X de IVA pendiente de declarar."
+    5. **IRPF notice** — emit if `summary.irpf_retenido > 0`. Example: "Tus clientes ya han retenido €X de IRPF en tu nombre."
+  - Return `[]` when data is empty or thresholds are not met.
+
+- [ ] Create `InsightsPanel` component
+  - File: `src/components/InsightsPanel.tsx`
+  - Props: `{ insights: string[] }`. Return `null` when array is empty.
+  - Card with header "Análisis automático", yellow left-border accent, and a styled `<ul>` where each item has a `→` glyph.
+
+- [ ] Add unit tests for `insights.ts`
+  - File: `tests/utils/insights.test.ts`
+  - Cover: empty data → empty array; concentration above and below threshold; VAT alert on/off; revenue change sign.
+
+- [ ] Wire into `DashboardPage`
+  - Derive `insights` inline (pure call, no effect): `const insights = deriveInsights(summary, monthly, clients, suppliers)`.
+  - Render `<InsightsPanel>` above `<FacturasTable>`, below the cash-flow section.
+
+**Block 3.5 closes with**: `git push origin dev-frontend`.
+
+---
+
+### Block 3.6 — Filter presets + forecast line + calendar heatmap (stretch)
+
+Pre-requisite: Block 3.2 complete.
+
+- [ ] Add quick-filter preset buttons to `DashboardFilters`
+  - File: `src/components/DashboardFilters.tsx`
+  - Add a row of 4 pill buttons: "Últimos 30 días", "Últimos 3 meses", "Este año", "Año anterior".
+  - Each button calls `setSearchParams` with the corresponding `desde` / `hasta` derived from `new Date()`. "Este año": Jan 1 → Dec 31 of current year. "Año anterior": same range one year back.
+  - Active preset is highlighted (compare current params to the derived values).
+
+- [ ] Add forecast option to `MonthlyChart`
+  - File: `src/components/MonthlyChart.tsx`
+  - Add optional `forecast?: boolean` prop (default `false`). When `true`, append 3 synthetic months after the last real data point: each predicted value is the average of the last 3 real months for both `ingresos` and `gastos`.
+  - Render forecast months as a separate dashed dataset (`borderDash: [6, 4]`). Label synthetic months with a `*` suffix.
+  - In `DashboardPage`, enable `forecast` only when no date filters are active.
+
+- [ ] Add invoice activity calendar heatmap
+  - Install: `npm install react-calendar-heatmap` (justification: no existing chart renders a calendar-grid layout; Chart.js has no calendar axis).
+  - File: `src/components/InvoiceHeatmap.tsx`
+  - Props: `{ facturas: Factura[] }`. Groups facturas by `fecha`, counts per day. Renders `CalendarHeatmap` for the current calendar year. Tooltip: "N facturas — DD MMM YYYY".
+  - Title: "Actividad de facturación".
+  - Wire into `DashboardPage` below `<InsightsPanel>`, full width.
+
+**Block 3.6 closes with**: `git push origin dev-frontend`. **End of Phase 3.**
+
+---
+
+### Deferred to Phase 4
+
+- Alerts UI (client dependency thresholds, VAT due-date reminders).
+- "Export PDF / print" button on dashboard (`html2pdf` or browser print).
+- Landing page (replaces `/login` as the public entry point).
+- Dark theme polish (card shadows, hover animations, gradient accents) — low functional value relative to the above.
