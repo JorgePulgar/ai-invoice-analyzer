@@ -109,7 +109,9 @@ Pre-requisite: Backend Phase 1 complete (all backend blocks merged into `main` o
 
 ---
 
-## Phase 2
+## Phase 2 — Complete ✅
+
+All blocks (2.1–2.4) implemented and tested. Ready to merge to main.
 
 ### Block 2.1 — Ingreso/Gasto visual differentiation
 
