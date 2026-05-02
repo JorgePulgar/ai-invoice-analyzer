@@ -337,19 +337,19 @@ Pre-requisite: Blocks 3.2 and 3.3 complete.
 
 Pre-requisite: Block 3.2 complete.
 
-- [ ] Add quick-filter preset buttons to `DashboardFilters`
+- [x] Add quick-filter preset buttons to `DashboardFilters`
   - File: `src/components/DashboardFilters.tsx`
   - Add a row of 4 pill buttons: "Últimos 30 días", "Últimos 3 meses", "Este año", "Año anterior".
   - Each button calls `setSearchParams` with the corresponding `desde` / `hasta` derived from `new Date()`. "Este año": Jan 1 → Dec 31 of current year. "Año anterior": same range one year back.
   - Active preset is highlighted (compare current params to the derived values).
 
-- [ ] Add forecast option to `MonthlyChart`
+- [x] Add forecast option to `MonthlyChart`
   - File: `src/components/MonthlyChart.tsx`
   - Add optional `forecast?: boolean` prop (default `false`). When `true`, append 3 synthetic months after the last real data point: each predicted value is the average of the last 3 real months for both `ingresos` and `gastos`.
   - Render forecast months as a separate dashed dataset (`borderDash: [6, 4]`). Label synthetic months with a `*` suffix.
   - In `DashboardPage`, enable `forecast` only when no date filters are active.
 
-- [ ] Add invoice activity calendar heatmap
+- [x] Add invoice activity calendar heatmap
   - Install: `npm install react-calendar-heatmap` (justification: no existing chart renders a calendar-grid layout; Chart.js has no calendar axis).
   - File: `src/components/InvoiceHeatmap.tsx`
   - Props: `{ facturas: Factura[] }`. Groups facturas by `fecha`, counts per day. Renders `CalendarHeatmap` for the current calendar year. Tooltip: "N facturas — DD MMM YYYY".
