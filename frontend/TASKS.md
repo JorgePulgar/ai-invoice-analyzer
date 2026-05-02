@@ -187,22 +187,22 @@ Pre-requisite for all blocks: Phase 2 merged to `main`.
 
 ### Block 3.1 — KPI expansion + period badge + post-upload navigation
 
-- [ ] Add `SupplierEntry` type and `api.getSuppliers()` method
+- [x] Add `SupplierEntry` type and `api.getSuppliers()` method
   - File: `src/types/index.ts` — add `SupplierEntry { proveedor: string; gastado: number; num_facturas: number }`.
   - File: `src/services/api.ts` — add `getSuppliers()` calling `GET /api/analytics/suppliers`. Under `USE_MOCK`, return `mockData.suppliers`.
   - File: `public/mock/data.json` — add a `suppliers` array with 3–5 entries.
 
-- [ ] Expand KPI row to 7 cards
+- [x] Expand KPI row to 7 cards
   - File: `src/pages/DashboardPage.tsx`
   - Add to the `kpis` array: **IRPF Retenido** (`summary.irpf_retenido`, `formatCurrency`, tone `neutral`), **Ticket Medio** (`summary.ticket_medio`, `formatCurrency`, tone `neutral`), **Num. Facturas** (`String(summary.num_facturas)`, tone `neutral`).
   - Update the responsive grid: `grid-cols-2 sm:grid-cols-4 xl:grid-cols-7` or two rows — use good judgement for readability.
 
-- [ ] Add period badge above KPI row
+- [x] Add period badge above KPI row
   - File: `src/pages/DashboardPage.tsx`
   - Render a small pill between `<DashboardFilters>` and the KPI grid showing `summary.periodo.desde` → `summary.periodo.hasta`, formatted with `formatDate`. Example: "Analizando: ene 2025 → dic 2025".
   - No new component needed; inline Tailwind pill is sufficient.
 
-- [ ] Add "Ir al dashboard" link after successful upload
+- [x] Add "Ir al dashboard" link after successful upload
   - File: `src/pages/UploadPage.tsx`
   - When `status === 'success'`, render a `<Link to="/dashboard">` button below the result card. Use `react-router-dom`'s `Link`.
 
