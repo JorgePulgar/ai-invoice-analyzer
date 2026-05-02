@@ -177,12 +177,22 @@ export function DashboardPage() {
     <Layout>
       <AiSummaryCard summary={aiSummary} loading={false} />
       <AlertsBanner summary={summary} vat={vat} clients={clients} />
-      <DashboardFilters facturas={facturasOriginal} />
+      <div data-print-hide>
+        <DashboardFilters facturas={facturasOriginal} />
+      </div>
 
       {summary && (
-        <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted mb-4">
-          Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
-        </p>
+        <div className="flex items-center justify-between mb-4" data-print-hide>
+          <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted">
+            Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
+          </p>
+          <button
+            onClick={() => window.print()}
+            className="text-xs font-medium text-bn-muted hover:text-bn-yellow transition-colors border border-bn-hairline rounded-full px-3 py-1"
+          >
+            Exportar PDF
+          </button>
+        </div>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">

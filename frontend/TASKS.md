@@ -452,7 +452,7 @@ Pre-requisite: backend seed script ready (see `backend/TASKS.md` Block 4.1).
 
 ### Block 4.4 — Export / print
 
-- [ ] Add "Exportar PDF" button to dashboard header
+- [x] Add "Exportar PDF" button to dashboard header
   - Use `window.print()` with a `@media print` stylesheet in `src/index.css`:
     - Hide nav, filters bar, action buttons, and `AlertsBanner` in print view.
     - Expand chart containers to full width in print.

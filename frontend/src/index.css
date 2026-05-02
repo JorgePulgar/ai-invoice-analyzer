@@ -1,3 +1,33 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@media print {
+  /* Hide chrome that is irrelevant on paper */
+  header,
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* White background so ink isn't wasted on the dark theme */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove page-level max-width and padding so content fills the page */
+  main {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  /* Collapse gaps so charts and cards sit closer together */
+  .grid {
+    gap: 0.5rem !important;
+  }
+
+  /* Ensure canvas (Chart.js) elements are not clipped */
+  canvas {
+    max-width: 100% !important;
+  }
+}
