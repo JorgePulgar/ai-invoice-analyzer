@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { DropZone } from '../components/DropZone';
 import { TipoBadge } from '../components/TipoBadge';
@@ -113,6 +114,16 @@ export function UploadPage() {
             onCancel={handleDiscard}
             submitting={status === 'saving'}
           />
+        )}
+
+        {/* Post-upload navigation */}
+        {status === 'success' && (
+          <Link
+            to="/dashboard"
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-bn-yellow px-4 py-2 text-sm font-semibold text-black hover:bg-bn-yellow-hover transition-colors"
+          >
+            Ir al dashboard →
+          </Link>
         )}
 
         {/* Result (Phase 1 path + Phase 2 after confirm) */}
