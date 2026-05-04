@@ -13,10 +13,10 @@ const MAX_SIZE_BYTES = 10 * 1024 * 1024;
 
 function validateFile(file: File): string | null {
   if (file.type !== 'application/pdf' || !file.name.toLowerCase().endsWith('.pdf')) {
-    return 'File must be a PDF.';
+    return 'El archivo debe ser un PDF.';
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return 'File exceeds the 10 MB limit.';
+    return 'El archivo excede el límite de 10 MB.';
   }
   return null;
 }
@@ -47,7 +47,7 @@ export function UploadPage() {
       setDraft(extracted);
       setStatus('review');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error extracting the invoice');
+      setError(err instanceof Error ? err.message : 'Error al extraer los datos de la factura');
       setStatus('error');
     }
   };
@@ -60,7 +60,7 @@ export function UploadPage() {
       setDraft(null);
       setStatus('success');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error saving the invoice');
+      setError(err instanceof Error ? err.message : 'Error al guardar la factura');
       setStatus('error');
     }
   };
@@ -75,9 +75,9 @@ export function UploadPage() {
   };
 
   const statusLabel: Partial<Record<Status, string>> = {
-    extracting: 'Extracting data…',
-    saving: 'Saving…',
-    success: 'Saved successfully',
+    extracting: 'Extrayendo datos…',
+    saving: 'Guardando…',
+    success: 'Guardado exitosamente',
   };
 
   const isDropZoneDisabled = status === 'extracting' || status === 'review' || status === 'saving';
@@ -85,9 +85,9 @@ export function UploadPage() {
   return (
     <Layout>
       <div className="max-w-2xl mx-auto">
-        <h2 className="text-xl font-semibold text-bn-body mb-1">Upload Invoice</h2>
+        <h2 className="text-xl font-semibold text-bn-body mb-1">Subir factura</h2>
         <p className="text-sm text-bn-muted mb-6">
-          Upload a PDF invoice to automatically extract its data.
+          Sube un PDF de factura para extraer automáticamente sus datos.
         </p>
 
         <DropZone onFile={handleFile} disabled={isDropZoneDisabled} />

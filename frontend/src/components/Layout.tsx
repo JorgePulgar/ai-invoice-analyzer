@@ -29,13 +29,13 @@ export function Layout({ children }: { children: ReactNode }) {
               to="/upload"
               className="text-sm font-medium text-bn-muted-strong hover:text-bn-yellow transition-colors"
             >
-              Upload
+              Subir
             </Link>
             <button
               onClick={handleLogout}
               className="text-sm font-semibold bg-bn-yellow text-bn-ink px-4 py-1.5 rounded hover:bg-bn-yellow-hover transition-colors"
             >
-              Logout
+              Cerrar sesión
             </button>
           </nav>
         </div>
