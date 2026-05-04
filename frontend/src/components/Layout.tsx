@@ -15,9 +15,12 @@ export function Layout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-bn-canvas text-bn-body">
       <header className="bg-bn-canvas border-b border-bn-hairline sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-bn-yellow font-bold text-lg tracking-tight">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-bn-yellow font-bold text-lg tracking-tight hover:opacity-80 transition-opacity cursor-pointer"
+          >
             Invoice Insights
-          </span>
+          </button>
           <nav className="flex gap-6 items-center">
             <Link
               to="/dashboard"
