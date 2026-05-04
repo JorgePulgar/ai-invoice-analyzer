@@ -38,7 +38,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const barDataset: ChartDataset<'bar'> = {
     type: 'bar',
-    label: 'Income',
+    label: 'Ingresos',
     data: displayData.map((d) => d.ingresos),
     backgroundColor: 'rgba(14, 203, 129, 0.65)',
     borderColor: '#0ECB81',
@@ -48,7 +48,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const expenseDataset: ChartDataset<'bar'> = {
     type: 'bar',
-    label: 'Expenses',
+    label: 'Gastos',
     data: displayData.map((d) => d.gastos),
     backgroundColor: 'rgba(246, 70, 93, 0.65)',
     borderColor: '#F6465D',
@@ -58,7 +58,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   const profitDataset: ChartDataset<'line'> = {
     type: 'line',
-    label: 'Net Profit',
+    label: 'Beneficio neto',
     data: displayData.map((d) => d.ingresos - d.gastos),
     borderColor: 'rgb(252, 213, 53)',
     backgroundColor: 'rgba(252, 213, 53, 0.1)',

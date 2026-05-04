@@ -27,7 +27,7 @@ export function ProfitMarginChart({ data }: ProfitMarginChartProps) {
     labels: data.map((d) => d.mes),
     datasets: [
       {
-        label: 'Profit Margin',
+        label: 'Margen de beneficio',
         data: margins,
         borderColor: 'rgb(252, 213, 53)',
         backgroundColor: 'rgba(252, 213, 53, 0.1)',

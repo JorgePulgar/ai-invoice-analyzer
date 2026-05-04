@@ -27,7 +27,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
     labels: data.map((d) => d.mes),
     datasets: [
       {
-        label: 'Cash Flow',
+        label: 'Flujo de caja',
         data: cashFlow,
         fill: true,
         tension: 0.4,
