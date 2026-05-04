@@ -30,9 +30,12 @@
   .bg-bn-card    { background-color: #ffffff !important; }
   .bg-bn-elevated { background-color: #F1F5F9 !important; }
   .border-bn-hairline { border-color: #E2E8F0 !important; }
-  .text-bn-body  { color: #1E293B !important; }
-  .text-bn-muted { color: #64748B !important; }
-  .text-bn-muted-strong { color: #475569 !important; }
+  .text-bn-body  { color: #000000 !important; }
+  .text-bn-muted { color: #000000 !important; }
+  .text-bn-muted-strong { color: #000000 !important; }
+
+  /* Force all text to black for readability on paper */
+  * { color: #000000 !important; }
 
   /* Hide chrome that is irrelevant on paper */
   header,

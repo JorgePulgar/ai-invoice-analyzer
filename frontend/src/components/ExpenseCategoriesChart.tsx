@@ -77,7 +77,18 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
     plugins: {
       legend: {
         position: 'bottom' as const,
-        labels: { color: '#EAECEF', font: { size: 11 }, boxWidth: 12, padding: 12 },
+        labels: {
+          color: '#EAECEF',
+          font: { size: 11 },
+          boxWidth: 12,
+          padding: 12,
+          formatter: (item: any) => {
+            const datasetIndex = item.datasetIndex;
+            const dataset = chartData.datasets[datasetIndex];
+            const value = dataset.data[item.index];
+            return `${item.text}: ${formatCurrency(value as number)}`;
+          },
+        },
       },
       tooltip: {
         callbacks: {

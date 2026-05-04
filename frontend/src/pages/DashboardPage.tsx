@@ -194,9 +194,17 @@ export function DashboardPage() {
       </div>
 
       {summary && (
-        <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted mb-4" data-print-hide>
-          Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
-        </p>
+        <div className="flex items-center justify-between gap-4 mb-4" data-print-hide>
+          <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted">
+            Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
+          </p>
+          <button
+            onClick={() => window.print()}
+            className="inline-flex items-center gap-2 rounded-full bg-bn-yellow text-bn-ink px-3 py-1.5 text-xs font-semibold hover:bg-bn-yellow-hover transition-colors"
+          >
+            ↓ Exportar PDF
+          </button>
+        </div>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6 kpi-grid">
