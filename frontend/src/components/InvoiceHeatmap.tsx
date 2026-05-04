@@ -2,6 +2,7 @@ import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import type { Factura } from '../types';
 import { formatDate } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 interface InvoiceHeatmapProps {
   facturas: Factura[];
@@ -34,9 +35,12 @@ export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline mb-6">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Actividad de facturación
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Actividad de facturación
+        </h3>
+        <InfoTooltip text="Número de facturas registradas cada día del año en curso. Las celdas más oscuras indican días con mayor actividad." />
+      </div>
       <div className="overflow-x-auto">
         <CalendarHeatmap
           startDate={startDate}

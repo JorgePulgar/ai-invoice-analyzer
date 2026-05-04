@@ -3,6 +3,7 @@ import type { TooltipItem } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -59,9 +60,12 @@ export function RevenueChart({ clients }: RevenueChartProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Ingresos por cliente
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Ingresos por cliente
+        </h3>
+        <InfoTooltip text="Reparto porcentual de tus ingresos totales entre clientes. Permite identificar dependencias de un solo cliente." />
+      </div>
       <Doughnut data={chartData} options={options} />
     </div>
   );

@@ -1,8 +1,11 @@
+import { InfoTooltip } from './InfoTooltip';
+
 interface KpiCardProps {
   label: string;
   value: string;
   tone?: 'up' | 'down' | 'neutral';
   trend?: { pct: number };
+  info?: string;
 }
 
 const toneClasses: Record<NonNullable<KpiCardProps['tone']>, string> = {
@@ -17,12 +20,15 @@ const toneGlyph: Record<NonNullable<KpiCardProps['tone']>, string | null> = {
   neutral: null,
 };
 
-export function KpiCard({ label, value, tone = 'neutral', trend }: KpiCardProps) {
+export function KpiCard({ label, value, tone = 'neutral', trend, info }: KpiCardProps) {
   const glyph = toneGlyph[tone];
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
-      <p className="text-xs font-medium text-bn-muted uppercase tracking-wide mb-2">{label}</p>
+      <div className="flex items-start justify-between gap-1 mb-2">
+        <p className="text-xs font-medium text-bn-muted uppercase tracking-wide">{label}</p>
+        {info && <InfoTooltip text={info} />}
+      </div>
       <p className={`text-2xl font-bold flex items-center gap-1.5 ${toneClasses[tone]}`}>
         {glyph && <span className="text-base">{glyph}</span>}
         {value}

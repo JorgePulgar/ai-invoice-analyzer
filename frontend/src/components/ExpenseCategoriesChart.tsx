@@ -3,6 +3,7 @@ import type { TooltipItem } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import type { Factura } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -89,9 +90,12 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Categorías de gasto
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Categorías de gasto
+        </h3>
+        <InfoTooltip text="Reparto de tus facturas de gasto por categoría, asignadas automáticamente según el concepto. Agrupa gastos no reconocidos como 'Otros'." />
+      </div>
       <Doughnut data={chartData} options={options} />
     </div>
   );
