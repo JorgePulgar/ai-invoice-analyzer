@@ -1,5 +1,6 @@
 import { Navigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 const FEATURES = [
   {
@@ -27,12 +28,13 @@ const FEATURES = [
 export function LandingPage() {
   const { isAuthed } = useAuth();
   const [searchParams] = useSearchParams();
+  const { ref: featuresRef, revealClass: featuresRevealClass } = useScrollReveal({ threshold: 0.1 });
   const isDemo = searchParams.get('demo') === '1';
 
   if (isAuthed) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="min-h-screen bg-bn-canvas text-bn-body flex flex-col">
+    <div className="min-h-screen bg-bn-canvas text-bn-body flex flex-col animate-fadeIn">
       {/* Nav */}
       <header className="border-b border-bn-hairline">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
@@ -81,16 +83,24 @@ export function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="bg-bn-card border-t border-bn-hairline py-20 px-6">
+      <section
+        ref={featuresRef}
+        className={`bg-bn-card border-t border-bn-hairline py-20 px-6 ${
+          featuresRevealClass
+        }`}
+      >
         <div className="max-w-6xl mx-auto">
           <h2 className="text-2xl font-bold text-center text-bn-body mb-12">
             Todo lo que necesitas para gestionar tus finanzas
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {FEATURES.map((f) => (
+            {FEATURES.map((f, i) => (
               <div
                 key={f.title}
-                className="bg-bn-elevated rounded-xl p-6 border border-bn-hairline"
+                className="bg-bn-elevated rounded-xl p-6 border border-bn-hairline hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+                style={{
+                  animation: featuresVisible ? `fadeSlideUp 0.6s ease-out both ${i * 75}ms` : 'none',
+                }}
               >
                 <div className="text-3xl mb-4">{f.icon}</div>
                 <h3 className="text-base font-semibold text-bn-body mb-2">{f.title}</h3>

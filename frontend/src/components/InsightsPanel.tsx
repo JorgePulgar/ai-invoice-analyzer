@@ -1,14 +1,22 @@
 import { InfoTooltip } from './InfoTooltip';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface InsightsPanelProps {
   insights: string[];
 }
 
 export function InsightsPanel({ insights }: InsightsPanelProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
+
   if (insights.length === 0) return null;
 
   return (
-    <div className="bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6">
+    <div
+      ref={ref}
+      className={`bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6 ${
+        revealClass
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-3">
         <p className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Análisis automático

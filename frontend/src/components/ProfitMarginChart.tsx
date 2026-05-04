@@ -12,6 +12,7 @@ import { Line } from 'react-chartjs-2';
 import type { MonthlyEntry } from '../types';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
@@ -20,6 +21,7 @@ interface ProfitMarginChartProps {
 }
 
 export function ProfitMarginChart({ data }: ProfitMarginChartProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const cc = useChartColors();
   const margins = data.map((d) =>
     d.ingresos > 0 ? ((d.ingresos - d.gastos) / d.ingresos) * 100 : null,
@@ -71,7 +73,12 @@ export function ProfitMarginChart({ data }: ProfitMarginChartProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
+        revealClass
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Margen de beneficio mensual (%)

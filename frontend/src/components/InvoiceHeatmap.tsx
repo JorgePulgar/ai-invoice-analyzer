@@ -3,6 +3,7 @@ import 'react-calendar-heatmap/dist/styles.css';
 import type { Factura } from '../types';
 import { formatDate } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface InvoiceHeatmapProps {
   facturas: Factura[];
@@ -12,6 +13,7 @@ interface InvoiceHeatmapProps {
 const LEGEND_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'] as const;
 
 export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const year = new Date().getFullYear();
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year, 11, 31);
@@ -34,7 +36,12 @@ export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
   }
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline mb-6">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline mb-6 ${
+        revealClass
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Actividad de facturación

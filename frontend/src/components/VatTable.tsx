@@ -1,14 +1,22 @@
 import type { VatEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface VatTableProps {
   vat: VatEntry[];
 }
 
 export function VatTable({ vat }: VatTableProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
+
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
+        revealClass
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           IVA Trimestral (detalle)

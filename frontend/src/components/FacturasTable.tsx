@@ -1,6 +1,7 @@
 import type { Factura } from '../types';
 import { TipoBadge } from './TipoBadge';
 import { formatCurrency, formatDate } from '../utils/format';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface FacturasTableProps {
   facturas: Factura[];
@@ -8,6 +9,8 @@ interface FacturasTableProps {
 }
 
 export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
+
   const handleDelete = (id: number, numero: string) => {
     if (window.confirm(`¿Eliminar factura ${numero}?`)) {
       onDelete(id);
@@ -15,7 +18,12 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl border border-bn-hairline overflow-hidden ${
+        revealClass
+      }`}
+    >
       <div className="px-6 py-4 border-b border-bn-hairline">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">Facturas</h3>
       </div>

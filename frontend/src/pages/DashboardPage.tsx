@@ -230,8 +230,16 @@ export function DashboardPage() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6 kpi-grid">
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} info={kpi.info} />
+        {kpis.map((kpi, i) => (
+          <KpiCard
+            key={kpi.label}
+            label={kpi.label}
+            value={kpi.value}
+            tone={kpi.tone}
+            trend={kpi.trend}
+            info={kpi.info}
+            style={{ animationDelay: `${i * 75}ms` }}
+          />
         ))}
       </div>
 

@@ -14,6 +14,7 @@ import type { MonthlyEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -22,6 +23,7 @@ interface CashFlowChartProps {
 }
 
 export function CashFlowChart({ data }: CashFlowChartProps) {
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const cc = useChartColors();
   const cashFlow = data.map((d) => d.ingresos - d.gastos);
 
@@ -77,7 +79,12 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
+        revealClass
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Flujo de caja mensual
