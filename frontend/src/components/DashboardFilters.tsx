@@ -167,7 +167,7 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
           onClick={() => setSearchParams({}, { replace: true })}
           className="text-xs font-medium text-bn-yellow hover:text-bn-yellow-hover transition-colors ml-auto"
         >
-          Clear filters
+          Limpiar filtros
         </button>
       )}
       </div>

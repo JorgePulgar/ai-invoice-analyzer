@@ -1,14 +1,22 @@
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { toggleTheme, getInitialTheme } from '../utils/theme';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [theme, setTheme] = useState(getInitialTheme);
 
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleThemeToggle = () => {
+    const next = toggleTheme();
+    setTheme(next);
   };
 
   return (
@@ -21,12 +29,12 @@ export function Layout({ children }: { children: ReactNode }) {
           >
             Invoice Insights
           </button>
-          <nav className="flex gap-6 items-center">
+          <nav className="flex gap-4 items-center">
             <Link
               to="/dashboard"
               className="text-sm font-medium text-bn-muted-strong hover:text-bn-yellow transition-colors"
             >
-              Dashboard
+              Panel
             </Link>
             <Link
               to="/upload"
@@ -34,6 +42,14 @@ export function Layout({ children }: { children: ReactNode }) {
             >
               Subir
             </Link>
+            <button
+              onClick={handleThemeToggle}
+              className="text-sm text-bn-muted hover:text-bn-yellow transition-colors"
+              aria-label="Cambiar tema"
+              title={theme === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {theme === 'dark' ? '☀' : '☾'}
+            </button>
             <button
               onClick={handleLogout}
               className="text-sm font-semibold bg-bn-yellow text-bn-ink px-4 py-1.5 rounded hover:bg-bn-yellow-hover transition-colors"

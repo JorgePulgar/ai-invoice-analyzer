@@ -16,7 +16,7 @@ function validateFile(file: File): string | null {
     return 'El archivo debe ser un PDF.';
   }
   if (file.size > MAX_SIZE_BYTES) {
-    return 'El archivo excede el límite de 10 MB.';
+    return 'El archivo supera el límite de 10 MB.';
   }
   return null;
 }
@@ -47,7 +47,7 @@ export function UploadPage() {
       setDraft(extracted);
       setStatus('review');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al extraer los datos de la factura');
+      setError(err instanceof Error ? err.message : 'Error al extraer la factura');
       setStatus('error');
     }
   };
@@ -77,7 +77,7 @@ export function UploadPage() {
   const statusLabel: Partial<Record<Status, string>> = {
     extracting: 'Extrayendo datos…',
     saving: 'Guardando…',
-    success: 'Guardado exitosamente',
+    success: 'Guardado correctamente',
   };
 
   const isDropZoneDisabled = status === 'extracting' || status === 'review' || status === 'saving';
@@ -87,7 +87,7 @@ export function UploadPage() {
       <div className="max-w-2xl mx-auto">
         <h2 className="text-xl font-semibold text-bn-body mb-1">Subir factura</h2>
         <p className="text-sm text-bn-muted mb-6">
-          Sube un PDF de factura para extraer automáticamente sus datos.
+          Sube una factura en PDF para extraer sus datos automáticamente.
         </p>
 
         <DropZone onFile={handleFile} disabled={isDropZoneDisabled} />

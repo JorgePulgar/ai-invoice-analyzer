@@ -38,14 +38,14 @@ export function FacturaForm({ initial, onSubmit, onCancel, submitting }: Factura
 
   function validate(): FormErrors {
     const e: FormErrors = {};
-    if (!draft.numero.trim()) e.numero = 'Requerido';
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.fecha)) e.fecha = 'Formato YYYY-MM-DD';
-    if (!draft.emisor.trim()) e.emisor = 'Requerido';
-    if (!draft.receptor.trim()) e.receptor = 'Requerido';
+    if (!draft.numero.trim()) e.numero = 'Obligatorio';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.fecha)) e.fecha = 'Formato AAAA-MM-DD';
+    if (!draft.emisor.trim()) e.emisor = 'Obligatorio';
+    if (!draft.receptor.trim()) e.receptor = 'Obligatorio';
     if (draft.base_imponible < 0) e.base_imponible = 'No puede ser negativo';
     if (draft.total < 0) e.total = 'No puede ser negativo';
     if (draft.irpf_porcentaje < 0 || draft.irpf_cantidad < 0)
-      e.irpf = 'El IRPF debe ser ≥ 0';
+      e.irpf = 'La retención debe ser ≥ 0';
     return e;
   }
 

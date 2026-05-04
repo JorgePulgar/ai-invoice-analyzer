@@ -15,6 +15,7 @@ import { Chart } from 'react-chartjs-2';
 import type { MonthlyEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(
   CategoryScale,
@@ -34,6 +35,7 @@ interface MonthlyChartProps {
 }
 
 export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
+  const cc = useChartColors();
   const displayData = forecast ? addForecast(data) : data;
 
   const barDataset: ChartDataset<'bar'> = {
@@ -84,7 +86,7 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
     responsive: true,
     plugins: {
       legend: {
-        labels: { color: '#EAECEF', font: { size: 12 } },
+        labels: { color: cc.legend, font: { size: 12 } },
       },
       tooltip: {
         callbacks: {
@@ -95,24 +97,24 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
     },
     scales: {
       x: {
-        ticks: { color: '#707A8A', font: { size: 11 } },
-        grid: { color: '#2B3139' },
-        border: { color: '#2B3139' },
+        ticks: { color: cc.tick, font: { size: 11 } },
+        grid: { color: cc.grid },
+        border: { color: cc.border },
       },
       y: {
         ticks: {
-          color: '#707A8A',
+          color: cc.tick,
           font: { size: 11 },
           callback: (value: number | string) => formatCurrency(Number(value)),
         },
-        grid: { color: '#2B3139' },
-        border: { color: '#2B3139' },
+        grid: { color: cc.grid },
+        border: { color: cc.border },
       },
     },
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Evolución mensual

@@ -82,7 +82,7 @@ export function DropZone({ onFile, disabled = false }: DropZoneProps) {
         Seleccionar archivo
       </button>
 
-      <p className="text-xs text-bn-muted">Solo PDF · máx 10 MB</p>
+      <p className="text-xs text-bn-muted">Solo PDF · máx. 10 MB</p>
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { MonthlyChart } from '../components/MonthlyChart';
@@ -18,6 +18,7 @@ import { deriveInsights } from '../utils/insights';
 import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
+import { AlertsBanner } from '../components/AlertsBanner';
 import { api } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import {
@@ -42,6 +43,7 @@ function calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number 
 
 export function DashboardPage() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // Server-provided data (unfiltered)
   const [serverSummary, setServerSummary] = useState<Summary | null>(null);
@@ -75,10 +77,43 @@ export function DashboardPage() {
         setServerSuppliers(sup);
       })
       .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Error loading data');
+        setError(err instanceof Error ? err.message : 'Error al cargar los datos');
       })
       .finally(() => setLoading(false));
   }, []);
+
+  // Filters are URL-driven. Derived analytics are memoised against the serialised
+  // search-params string so any URL change reliably triggers a recompute.
+  // All useMemo calls must be before any conditional return (Rules of Hooks).
+  const paramsKey = searchParams.toString();
+  const filterState = useMemo(() => parseFilters(searchParams), [paramsKey, searchParams]);
+  const filtersActive = useMemo(() => !isDefaultFilters(filterState), [filterState]);
+
+  const filteredFacturas = useMemo(
+    () => (filtersActive ? applyFilters(facturasOriginal, filterState) : facturasOriginal),
+    [filtersActive, facturasOriginal, filterState],
+  );
+
+  const summary = useMemo(
+    () => (filtersActive ? deriveSummary(filteredFacturas) : serverSummary),
+    [filtersActive, filteredFacturas, serverSummary],
+  );
+  const monthly = useMemo(
+    () => (filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly),
+    [filtersActive, filteredFacturas, serverMonthly],
+  );
+  const clients = useMemo(
+    () => (filtersActive ? deriveClients(filteredFacturas) : serverClients),
+    [filtersActive, filteredFacturas, serverClients],
+  );
+  const vat = useMemo(
+    () => (filtersActive ? deriveVat(filteredFacturas) : serverVat),
+    [filtersActive, filteredFacturas, serverVat],
+  );
+  const suppliers = useMemo(
+    () => (filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers),
+    [filtersActive, filteredFacturas, serverSuppliers],
+  );
 
   const handleDelete = async (id: number) => {
     try {
@@ -107,20 +142,6 @@ export function DashboardPage() {
       </Layout>
     );
   }
-
-  // Apply filters
-  const filterState = parseFilters(searchParams);
-  const filtersActive = !isDefaultFilters(filterState);
-
-  const filteredFacturas = filtersActive
-    ? applyFilters(facturasOriginal, filterState)
-    : facturasOriginal;
-
-  const summary = filtersActive ? deriveSummary(filteredFacturas) : serverSummary;
-  const monthly = filtersActive ? deriveMonthly(filteredFacturas) : serverMonthly;
-  const clients = filtersActive ? deriveClients(filteredFacturas) : serverClients;
-  const vat = filtersActive ? deriveVat(filteredFacturas) : serverVat;
-  const suppliers = filtersActive ? deriveSuppliers(filteredFacturas) : serverSuppliers;
 
   const ingresosTrend = calcTrend(monthly, 'ingresos');
   const gastosTrend = calcTrend(monthly, 'gastos');
@@ -189,11 +210,12 @@ export function DashboardPage() {
       )}
 
       <AiSummaryCard summary={aiSummary} loading={false} />
+      <AlertsBanner summary={summary} vat={vat} clients={clients} />
       <div data-print-hide>
         <DashboardFilters facturas={facturasOriginal} />
       </div>
 
-      {summary && (
+      {summary && summary.periodo.desde && (
         <div className="flex items-center justify-between gap-4 mb-4" data-print-hide>
           <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted">
             Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
@@ -214,8 +236,18 @@ export function DashboardPage() {
       </div>
 
       {filteredFacturas.length === 0 && filtersActive ? (
-        <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
-          <p className="text-bn-muted">Sin resultados para los filtros seleccionados.</p>
+        <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-20 text-center mb-6 flex flex-col items-center gap-4">
+          <span className="text-4xl opacity-40">🔍</span>
+          <p className="text-bn-body font-semibold">Sin resultados para este periodo</p>
+          <p className="text-bn-muted text-sm max-w-sm">
+            Los filtros activos no devuelven facturas. Prueba con un rango de fechas diferente o limpia los filtros para ver todos los datos.
+          </p>
+          <button
+            onClick={() => navigate('/dashboard', { replace: true })}
+            className="mt-2 text-sm font-semibold bg-bn-yellow text-bn-ink px-5 py-2 rounded-lg hover:bg-bn-yellow-hover transition-colors"
+          >
+            Limpiar filtros
+          </button>
         </div>
       ) : (
         <>
@@ -223,17 +255,17 @@ export function DashboardPage() {
             <MonthlyChart data={monthly} forecast={!filtersActive} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <TopClientsList clients={clients} />
             <TopSuppliersList suppliers={suppliers} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <RevenueChart clients={clients} />
             <ExpenseCategoriesChart facturas={filteredFacturas} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
               <VatChart vat={vat} />
             </div>
@@ -244,7 +276,7 @@ export function DashboardPage() {
             <VatTable vat={vat} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CashFlowChart data={monthly} />
             <ProfitMarginChart data={monthly} />
           </div>

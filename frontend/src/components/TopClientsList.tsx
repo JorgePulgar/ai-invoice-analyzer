@@ -8,7 +8,7 @@ interface TopClientsListProps {
 
 export function TopClientsList({ clients }: TopClientsListProps) {
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline h-full">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Top Clientes

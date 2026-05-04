@@ -117,7 +117,7 @@ export function LoginPage() {
               {submitting
                 ? 'Cargando…'
                 : mode === 'login'
-                  ? 'Entrar'
+                  ? 'Iniciar sesión'
                   : 'Crear cuenta'}
             </button>
           </form>
@@ -142,7 +142,7 @@ export function LoginPage() {
                   onClick={() => switchMode('login')}
                   className="text-bn-yellow hover:text-bn-yellow-hover font-medium transition-colors"
                 >
-                  Inicia sesión
+                  Iniciar sesión
                 </button>
               </>
             )}

@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Light theme (default) */
+:root {
+  --bn-canvas:       #F8FAFC;
+  --bn-card:         #FFFFFF;
+  --bn-elevated:     #F1F5F9;
+  --bn-hairline:     #E2E8F0;
+  --bn-body:         #1E293B;
+  --bn-muted:        #64748B;
+  --bn-muted-strong: #475569;
+}
+
+/* Dark theme */
+.dark {
+  --bn-canvas:       #0B0E11;
+  --bn-card:         #1E2329;
+  --bn-elevated:     #2B3139;
+  --bn-hairline:     #2B3139;
+  --bn-body:         #EAECEF;
+  --bn-muted:        #707A8A;
+  --bn-muted-strong: #929AA5;
+}
+
 /* ── Heatmap: override react-calendar-heatmap library defaults ──────────── */
 
 /* Light mode — GitHub contribution graph greens */
@@ -19,23 +41,23 @@
 }
 
 @media print {
-  /* Force white paper background and readable text */
-  body {
-    background: #ffffff !important;
-    color: #1E293B !important;
+  /* Force light-theme tokens so cards/backgrounds are white on paper
+     regardless of whether the user has dark mode active */
+  :root,
+  .dark {
+    --bn-canvas:       #FFFFFF;
+    --bn-card:         #FFFFFF;
+    --bn-elevated:     #F8FAFC;
+    --bn-hairline:     #E2E8F0;
+    --bn-body:         #1E293B;
+    --bn-muted:        #64748B;
+    --bn-muted-strong: #475569;
   }
 
-  /* Override compiled Tailwind dark-mode card/surface colors */
-  .bg-bn-canvas  { background-color: #F8FAFC !important; }
-  .bg-bn-card    { background-color: #ffffff !important; }
-  .bg-bn-elevated { background-color: #F1F5F9 !important; }
-  .border-bn-hairline { border-color: #E2E8F0 !important; }
-  .text-bn-body  { color: #000000 !important; }
-  .text-bn-muted { color: #000000 !important; }
-  .text-bn-muted-strong { color: #000000 !important; }
-
-  /* Force all text to black for readability on paper */
-  * { color: #000000 !important; }
+  body {
+    background: white !important;
+    color: #1E293B !important;
+  }
 
   /* Hide chrome that is irrelevant on paper */
   header,
@@ -43,13 +65,13 @@
     display: none !important;
   }
 
-  /* Remove page-level max-width so content fills the page */
+  /* Remove page-level max-width and padding so content fills the page */
   main {
     max-width: none !important;
     padding: 0 !important;
   }
 
-  /* Collapse grid gaps */
+  /* Collapse gaps so charts and cards sit closer together */
   .grid {
     gap: 0.5rem !important;
   }
@@ -72,7 +94,7 @@
     page-break-after: avoid;
   }
 
-  /* Chart.js canvas: prevent clipping */
+  /* Chart.js canvas: prevent clipping and ensure height is respected */
   canvas {
     max-width: 100% !important;
     height: auto !important;

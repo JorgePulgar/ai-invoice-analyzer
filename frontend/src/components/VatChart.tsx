@@ -11,6 +11,7 @@ import { Bar } from 'react-chartjs-2';
 import type { VatEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -19,6 +20,7 @@ interface VatChartProps {
 }
 
 export function VatChart({ vat }: VatChartProps) {
+  const cc = useChartColors();
   const labels = vat.map((v) => `${v.trimestre} ${v.anio}`);
 
   const chartData = {
@@ -55,7 +57,7 @@ export function VatChart({ vat }: VatChartProps) {
     responsive: true,
     plugins: {
       legend: {
-        labels: { color: '#EAECEF', font: { size: 11 } },
+        labels: { color: cc.legend, font: { size: 11 } },
       },
       tooltip: {
         callbacks: {
@@ -66,24 +68,24 @@ export function VatChart({ vat }: VatChartProps) {
     },
     scales: {
       x: {
-        ticks: { color: '#707A8A', font: { size: 11 } },
-        grid: { color: '#2B3139' },
-        border: { color: '#2B3139' },
+        ticks: { color: cc.tick, font: { size: 11 } },
+        grid: { color: cc.grid },
+        border: { color: cc.border },
       },
       y: {
         ticks: {
-          color: '#707A8A',
+          color: cc.tick,
           font: { size: 11 },
           callback: (value: number | string) => formatCurrency(Number(value)),
         },
-        grid: { color: '#2B3139' },
-        border: { color: '#2B3139' },
+        grid: { color: cc.grid },
+        border: { color: cc.border },
       },
     },
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           IVA Trimestral

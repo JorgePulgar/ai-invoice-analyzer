@@ -4,6 +4,7 @@ import { Doughnut } from 'react-chartjs-2';
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -22,10 +23,12 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ clients }: RevenueChartProps) {
+  const cc = useChartColors();
+
   if (clients.length === 0) {
     return (
       <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px]">
-        <p className="text-bn-muted text-sm">No income data available.</p>
+        <p className="text-bn-muted text-sm">Sin datos de ingresos.</p>
       </div>
     );
   }
@@ -36,7 +39,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
       {
         data: clients.map((c) => c.facturado),
         backgroundColor: clients.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderColor: '#1E2329',
+        borderColor: cc.doughnutBorder,
         borderWidth: 2,
       },
     ],
@@ -48,7 +51,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: '#EAECEF',
+          color: cc.legend,
           font: { size: 11 },
           boxWidth: 12,
           padding: 12,
@@ -68,7 +71,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Ingresos por cliente

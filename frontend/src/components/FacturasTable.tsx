@@ -57,7 +57,7 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
                     onClick={() => handleDelete(f.id, f.numero)}
                     className="text-xs text-bn-muted hover:text-bn-down transition-colors font-medium"
                   >
-                    Delete
+                    Eliminar
                   </button>
                 </td>
               </tr>

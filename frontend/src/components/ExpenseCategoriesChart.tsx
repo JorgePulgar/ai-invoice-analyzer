@@ -4,6 +4,7 @@ import { Doughnut } from 'react-chartjs-2';
 import type { Factura } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -40,12 +41,13 @@ interface ExpenseCategoriesChartProps {
 }
 
 export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps) {
+  const cc = useChartColors();
   const gastos = facturas.filter((f) => f.tipo === 'gasto');
 
   if (gastos.length === 0) {
     return (
       <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px]">
-        <p className="text-bn-muted text-sm">No expense data available.</p>
+        <p className="text-bn-muted text-sm">Sin datos de gastos.</p>
       </div>
     );
   }
@@ -66,7 +68,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
       {
         data: values,
         backgroundColor: labels.map((_, i) => PALETTE[i % PALETTE.length]),
-        borderColor: '#1E2329',
+        borderColor: cc.doughnutBorder,
         borderWidth: 2,
       },
     ],
@@ -78,7 +80,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
       legend: {
         position: 'bottom' as const,
         labels: {
-          color: '#EAECEF',
+          color: cc.legend,
           font: { size: 11 },
           boxWidth: 12,
           padding: 12,
@@ -98,7 +100,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline">
+    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Categorías de gasto
