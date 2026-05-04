@@ -6,7 +6,7 @@ interface InsightsPanelProps {
 }
 
 export function InsightsPanel({ insights }: InsightsPanelProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
 
   if (insights.length === 0) return null;
 
@@ -14,7 +14,7 @@ export function InsightsPanel({ insights }: InsightsPanelProps) {
     <div
       ref={ref}
       className={`bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6 ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-3">

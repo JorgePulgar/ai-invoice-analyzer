@@ -28,7 +28,7 @@ const FEATURES = [
 export function LandingPage() {
   const { isAuthed } = useAuth();
   const [searchParams] = useSearchParams();
-  const { ref: featuresRef, isVisible: featuresVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref: featuresRef, revealClass: featuresRevealClass } = useScrollReveal({ threshold: 0.1 });
   const isDemo = searchParams.get('demo') === '1';
 
   if (isAuthed) return <Navigate to="/dashboard" replace />;
@@ -86,7 +86,7 @@ export function LandingPage() {
       <section
         ref={featuresRef}
         className={`bg-bn-card border-t border-bn-hairline py-20 px-6 ${
-          featuresVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+          featuresRevealClass
         }`}
       >
         <div className="max-w-6xl mx-auto">

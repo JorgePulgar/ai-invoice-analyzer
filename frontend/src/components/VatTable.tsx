@@ -8,13 +8,13 @@ interface VatTableProps {
 }
 
 export function VatTable({ vat }: VatTableProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
 
   return (
     <div
       ref={ref}
       className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-4">

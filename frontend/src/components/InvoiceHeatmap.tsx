@@ -13,7 +13,7 @@ interface InvoiceHeatmapProps {
 const LEGEND_COLORS = ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'] as const;
 
 export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const year = new Date().getFullYear();
   const startDate = new Date(year, 0, 1);
   const endDate = new Date(year, 11, 31);
@@ -39,7 +39,7 @@ export function InvoiceHeatmap({ facturas }: InvoiceHeatmapProps) {
     <div
       ref={ref}
       className={`bg-bn-card rounded-xl p-6 border border-bn-hairline mb-6 ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-4">

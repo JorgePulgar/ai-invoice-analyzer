@@ -24,7 +24,7 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ clients }: RevenueChartProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const cc = useChartColors();
 
   if (clients.length === 0) {
@@ -32,7 +32,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
       <div
         ref={ref}
         className={`bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px] ${
-          isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+          revealClass
         }`}
       >
         <p className="text-bn-muted text-sm">Sin datos de ingresos.</p>
@@ -81,7 +81,7 @@ export function RevenueChart({ clients }: RevenueChartProps) {
     <div
       ref={ref}
       className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-4">

@@ -238,7 +238,6 @@ export function DashboardPage() {
             tone={kpi.tone}
             trend={kpi.trend}
             info={kpi.info}
-            animate={`animate-fadeSlideUp`}
             style={{ animationDelay: `${i * 75}ms` }}
           />
         ))}

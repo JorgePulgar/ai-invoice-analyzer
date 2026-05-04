@@ -35,7 +35,7 @@ export default {
         fadeSlideUp: {
           'from': {
             opacity: '0',
-            transform: 'translateY(20px)',
+            transform: 'translateY(16px)',
           },
           'to': {
             opacity: '1',
@@ -75,7 +75,7 @@ export default {
       },
       animation: {
         fadeIn: 'fadeIn 0.5s ease-out both',
-        fadeSlideUp: 'fadeSlideUp 0.6s ease-out both',
+        fadeSlideUp: 'fadeSlideUp 0.5s ease-out both',
         fadeSlideUpBlur: 'fadeSlideUpBlur 0.6s ease-out both',
         scaleIn: 'scaleIn 0.5s ease-out both',
         lift: 'lift 0.3s ease-out both',

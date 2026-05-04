@@ -42,7 +42,7 @@ interface ExpenseCategoriesChartProps {
 }
 
 export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
   const cc = useChartColors();
   const gastos = facturas.filter((f) => f.tipo === 'gasto');
 
@@ -51,7 +51,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
       <div
         ref={ref}
         className={`bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px] ${
-          isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+          revealClass
         }`}
       >
         <p className="text-bn-muted text-sm">Sin datos de gastos.</p>
@@ -110,7 +110,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
     <div
       ref={ref}
       className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="flex items-center justify-between gap-2 mb-4">

@@ -9,7 +9,7 @@ interface FacturasTableProps {
 }
 
 export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
-  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+  const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
 
   const handleDelete = (id: number, numero: string) => {
     if (window.confirm(`¿Eliminar factura ${numero}?`)) {
@@ -21,7 +21,7 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
     <div
       ref={ref}
       className={`bg-bn-card rounded-xl border border-bn-hairline overflow-hidden ${
-        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        revealClass
       }`}
     >
       <div className="px-6 py-4 border-b border-bn-hairline">

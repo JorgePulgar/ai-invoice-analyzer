@@ -14,9 +14,10 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setIsVisible(true);
-          // Unobserve after first trigger to prevent re-animation on scroll
           observer.unobserve(entry.target);
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => setIsVisible(true));
+          });
         }
       },
       { threshold, rootMargin }
@@ -31,5 +32,7 @@ export function useScrollReveal(options: UseScrollRevealOptions = {}) {
     };
   }, [threshold, rootMargin]);
 
-  return { ref, isVisible };
+  const revealClass = isVisible ? 'animate-fadeSlideUp' : 'opacity-0';
+
+  return { ref, isVisible, revealClass };
 }
