@@ -1,5 +1,6 @@
 import type { VatEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 interface VatTableProps {
   vat: VatEntry[];
@@ -8,9 +9,12 @@ interface VatTableProps {
 export function VatTable({ vat }: VatTableProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        IVA Trimestral
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          IVA Trimestral (detalle)
+        </h3>
+        <InfoTooltip text="Detalle numérico del IVA por trimestre. 'Repercutido' es el IVA cobrado a clientes; 'soportado', el pagado a proveedores; 'a pagar', la diferencia que debes declarar a Hacienda." />
+      </div>
       <table className="w-full text-sm">
         <thead>
           <tr className="text-xs text-bn-muted uppercase">

@@ -3,6 +3,7 @@ import type { TooltipItem } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -49,7 +50,16 @@ export function RevenueChart({ clients }: RevenueChartProps) {
     plugins: {
       legend: {
         position: 'bottom' as const,
-        labels: { color: cc.legend, font: { size: 11 }, boxWidth: 12, padding: 12 },
+        labels: {
+          color: cc.legend,
+          font: { size: 11 },
+          boxWidth: 12,
+          padding: 12,
+          formatter: (item: any) => {
+            const value = chartData.datasets[0].data[item.index];
+            return `${item.text}: ${formatCurrency(value as number)}`;
+          },
+        },
       },
       tooltip: {
         callbacks: {
@@ -62,9 +72,12 @@ export function RevenueChart({ clients }: RevenueChartProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Ingresos por cliente
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Ingresos por cliente
+        </h3>
+        <InfoTooltip text="Reparto porcentual de tus ingresos totales entre clientes. Permite identificar dependencias de un solo cliente." />
+      </div>
       <Doughnut data={chartData} options={options} />
     </div>
   );

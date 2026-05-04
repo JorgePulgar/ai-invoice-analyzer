@@ -1,9 +1,11 @@
+import { InfoTooltip } from './InfoTooltip';
+
 interface KpiCardProps {
   label: string;
   value: string;
   tone?: 'up' | 'down' | 'neutral';
   trend?: { pct: number };
-  icon?: string;
+  info?: string;
 }
 
 const toneValueColor: Record<NonNullable<KpiCardProps['tone']>, string> = {
@@ -18,18 +20,10 @@ const toneAccent: Record<NonNullable<KpiCardProps['tone']>, string> = {
   neutral: 'border-t-bn-yellow',
 };
 
-const toneIconStyle: Record<NonNullable<KpiCardProps['tone']>, string> = {
-  up:      'bg-bn-up/10 text-bn-up',
-  down:    'bg-bn-down/10 text-bn-down',
-  neutral: 'bg-bn-yellow/10 text-bn-yellow',
-};
-
 const trendStyle = (pct: number) =>
-  pct >= 0
-    ? 'bg-bn-up/10 text-bn-up'
-    : 'bg-bn-down/10 text-bn-down';
+  pct >= 0 ? 'bg-bn-up/10 text-bn-up' : 'bg-bn-down/10 text-bn-down';
 
-export function KpiCard({ label, value, tone = 'neutral', trend, icon }: KpiCardProps) {
+export function KpiCard({ label, value, tone = 'neutral', trend, info }: KpiCardProps) {
   return (
     <div
       className={`
@@ -40,31 +34,17 @@ export function KpiCard({ label, value, tone = 'neutral', trend, icon }: KpiCard
         min-w-0 overflow-hidden flex flex-col gap-2
       `}
     >
-      {/* Label row */}
       <div className="flex items-start justify-between gap-1">
         <p className="text-[10px] font-semibold text-bn-muted uppercase tracking-widest leading-tight">
           {label}
         </p>
-        {icon && (
-          <span
-            className={`
-              flex-shrink-0 w-6 h-6 rounded-lg
-              flex items-center justify-center
-              text-[11px] font-bold
-              ${toneIconStyle[tone]}
-            `}
-          >
-            {icon}
-          </span>
-        )}
+        {info && <div className="flex-shrink-0"><InfoTooltip text={info} /></div>}
       </div>
 
-      {/* Value */}
       <p className={`text-xl font-extrabold leading-none tracking-tight ${toneValueColor[tone]}`}>
         {value}
       </p>
 
-      {/* Trend pill */}
       {trend !== undefined ? (
         <span
           className={`

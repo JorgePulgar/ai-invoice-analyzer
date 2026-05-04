@@ -1,5 +1,6 @@
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 interface TopClientsListProps {
   clients: ClientEntry[];
@@ -8,9 +9,12 @@ interface TopClientsListProps {
 export function TopClientsList({ clients }: TopClientsListProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline h-full">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Top Clientes
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Top Clientes
+        </h3>
+        <InfoTooltip text="Clientes que más te han facturado en el periodo, ordenados por importe total. Solo incluye facturas de ingreso." />
+      </div>
       <ol className="space-y-1">
         {clients.map((client, i) => (
           <li

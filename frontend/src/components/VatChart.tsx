@@ -10,6 +10,7 @@ import type { TooltipItem } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 import type { VatEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -85,9 +86,12 @@ export function VatChart({ vat }: VatChartProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        IVA Trimestral
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          IVA Trimestral
+        </h3>
+        <InfoTooltip text="IVA repercutido (cobrado a clientes), soportado (pagado a proveedores) y diferencia a pagar a Hacienda, desglosados por trimestre del año en curso." />
+      </div>
       <Bar data={chartData} options={options} />
     </div>
   );

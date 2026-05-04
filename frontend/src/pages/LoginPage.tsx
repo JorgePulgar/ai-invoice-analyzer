@@ -1,15 +1,21 @@
 import { useState } from 'react';
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+
+const DEMO_EMAIL = 'demo@invoice-insights.com';
+const DEMO_PASSWORD = 'demo1234';
 
 export function LoginPage() {
   const { isAuthed, login, register } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
   const isDemo = searchParams.get('demo') === '1';
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login';
+
+  const [mode, setMode] = useState<'login' | 'register'>(initialMode);
+  const [email, setEmail] = useState(isDemo ? DEMO_EMAIL : '');
+  const [password, setPassword] = useState(isDemo ? DEMO_PASSWORD : '');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -27,7 +33,7 @@ export function LoginPage() {
       }
       navigate('/dashboard');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : 'Error desconocido');
     } finally {
       setSubmitting(false);
     }
@@ -43,18 +49,23 @@ export function LoginPage() {
       <div className="w-full max-w-md">
         {/* Brand */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-bn-yellow tracking-tight">Invoice Insights</h1>
+          <Link to="/" className="text-2xl font-bold text-bn-yellow tracking-tight hover:opacity-80 transition-opacity">
+            Invoice Insights
+          </Link>
           <p className="text-sm text-bn-muted mt-1">
             Análisis financiero inteligente para autónomos y pymes
           </p>
         </div>
 
-        {/* Demo hint */}
+        {/* Demo banner */}
         {isDemo && (
-          <div className="bg-bn-card border border-bn-yellow/40 rounded-xl px-5 py-3 mb-4 text-sm text-bn-body">
-            <span className="font-semibold text-bn-yellow">Cuenta demo:</span>{' '}
-            <span className="font-mono">demo@invoice-insights.com</span> /{' '}
-            <span className="font-mono">demo1234</span>
+          <div className="mb-4 bg-bn-card border border-bn-yellow/40 rounded-xl px-5 py-3 text-sm text-bn-body">
+            <p className="font-semibold text-bn-yellow mb-1">Cuenta demo — credenciales precargadas</p>
+            <p className="text-bn-muted text-xs">
+              <span className="font-mono text-bn-body">{DEMO_EMAIL}</span>
+              {' / '}
+              <span className="font-mono text-bn-body">{DEMO_PASSWORD}</span>
+            </p>
           </div>
         )}
 

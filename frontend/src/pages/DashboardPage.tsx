@@ -154,30 +154,61 @@ export function DashboardPage() {
           value: formatCurrency(summary.ingresos_totales),
           tone: 'up' as const,
           trend: ingresosTrend !== null ? { pct: ingresosTrend } : undefined,
-          icon: '+',
+          info: 'Suma de los importes totales de todas las facturas emitidas (ingresos) en el periodo seleccionado.',
         },
         {
           label: 'Gastos totales',
           value: formatCurrency(summary.gastos_totales),
           tone: 'down' as const,
           trend: gastosTrend !== null ? { pct: gastosTrend } : undefined,
-          icon: '−',
+          info: 'Suma de los importes totales de todas las facturas recibidas (gastos) en el periodo seleccionado.',
         },
         {
           label: 'Beneficio neto',
           value: formatCurrency(summary.beneficio_neto),
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
-          icon: '=',
+          info: 'Ingresos totales menos gastos totales. Refleja el beneficio antes de impuestos del periodo.',
         },
-        { label: 'IVA a pagar',    value: formatCurrency(summary.iva_a_pagar),    tone: 'neutral' as const, icon: '%' },
-        { label: 'IRPF Retenido',  value: formatCurrency(summary.irpf_retenido),  tone: 'neutral' as const, icon: '‱' },
-        { label: 'Ticket Medio',   value: formatCurrency(summary.ticket_medio),   tone: 'neutral' as const, icon: '⌀' },
-        { label: 'Num. Facturas',  value: String(summary.num_facturas),           tone: 'neutral' as const, icon: '#' },
+        {
+          label: 'IVA a pagar',
+          value: formatCurrency(summary.iva_a_pagar),
+          tone: 'neutral' as const,
+          info: 'IVA repercutido (cobrado a clientes) menos IVA soportado (pagado a proveedores). Es el importe que debes declarar a Hacienda.',
+        },
+        {
+          label: 'IRPF retenido',
+          value: formatCurrency(summary.irpf_retenido),
+          tone: 'neutral' as const,
+          info: 'Suma del IRPF retenido por tus clientes en facturas de ingreso. Ellos lo ingresan a Hacienda en tu nombre.',
+        },
+        {
+          label: 'Ticket medio',
+          value: formatCurrency(summary.ticket_medio),
+          tone: 'neutral' as const,
+          info: 'Importe medio por factura de ingreso en el periodo. Útil para comparar entre periodos o con la media del sector.',
+        },
+        {
+          label: 'Num. facturas',
+          value: String(summary.num_facturas),
+          tone: 'neutral' as const,
+          info: 'Número total de facturas registradas (ingresos y gastos) en el periodo seleccionado.',
+        },
       ]
     : [];
 
   return (
     <Layout>
+      {/* Print-only header — hidden on screen via Tailwind's hidden class */}
+      {summary && (
+        <div className="hidden print:block mb-6 pb-4 border-b border-bn-hairline">
+          <p className="text-lg font-bold text-bn-body">Invoice Insights — Resumen financiero</p>
+          <p className="text-xs text-bn-muted mt-1">
+            Periodo: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
+            {' · '}Generado el {formatDate(new Date().toISOString().slice(0, 10))}
+          </p>
+        </div>
+      )}
+
       <AiSummaryCard summary={aiSummary} loading={false} />
       <AlertsBanner summary={summary} vat={vat} clients={clients} />
       <div data-print-hide>
@@ -185,22 +216,22 @@ export function DashboardPage() {
       </div>
 
       {summary && summary.periodo.desde && (
-        <div className="flex items-center justify-between mb-4" data-print-hide>
+        <div className="flex items-center justify-between gap-4 mb-4" data-print-hide>
           <p className="inline-flex items-center gap-1 rounded-full bg-bn-card border border-bn-hairline px-3 py-1 text-xs text-bn-muted">
             Analizando: {formatDate(summary.periodo.desde)} → {formatDate(summary.periodo.hasta)}
           </p>
           <button
             onClick={() => window.print()}
-            className="text-xs font-medium text-bn-muted hover:text-bn-yellow transition-colors border border-bn-hairline rounded-full px-3 py-1"
+            className="inline-flex items-center gap-2 rounded-full bg-bn-yellow text-bn-ink px-3 py-1.5 text-xs font-semibold hover:bg-bn-yellow-hover transition-colors"
           >
-            Exportar PDF
+            ↓ Exportar PDF
           </button>
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-6 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6 kpi-grid">
         {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} icon={kpi.icon} />
+          <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} tone={kpi.tone} trend={kpi.trend} info={kpi.info} />
         ))}
       </div>
 
@@ -250,13 +281,19 @@ export function DashboardPage() {
             <ProfitMarginChart data={monthly} />
           </div>
 
-          <InsightsPanel insights={insights} />
+          <div data-print-hide>
+            <InsightsPanel insights={insights} />
+          </div>
 
-          <InvoiceHeatmap facturas={filteredFacturas} />
+          <div data-print-hide>
+            <InvoiceHeatmap facturas={filteredFacturas} />
+          </div>
         </>
       )}
 
-      <FacturasTable facturas={filteredFacturas} onDelete={handleDelete} />
+      <div data-print-hide>
+        <FacturasTable facturas={filteredFacturas} onDelete={handleDelete} />
+      </div>
     </Layout>
   );
 }

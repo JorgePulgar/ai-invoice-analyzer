@@ -24,6 +24,22 @@
   --bn-muted-strong: #929AA5;
 }
 
+/* ── Heatmap: override react-calendar-heatmap library defaults ──────────── */
+
+/* Light mode — GitHub contribution graph greens */
+.react-calendar-heatmap .color-github-0 { fill: #ebedf0; }
+.react-calendar-heatmap .color-github-1 { fill: #9be9a8; }
+.react-calendar-heatmap .color-github-2 { fill: #40c463; }
+.react-calendar-heatmap .color-github-3 { fill: #30a14e; }
+.react-calendar-heatmap .color-github-4 { fill: #216e39; }
+
+/* ── Print styles ─────────────────────────────────────────────────────────── */
+
+@page {
+  size: A4 portrait;
+  margin: 12mm;
+}
+
 @media print {
   /* Force light-theme tokens so cards/backgrounds are white on paper
      regardless of whether the user has dark mode active */
@@ -38,15 +54,15 @@
     --bn-muted-strong: #475569;
   }
 
+  body {
+    background: white !important;
+    color: #1E293B !important;
+  }
+
   /* Hide chrome that is irrelevant on paper */
   header,
   [data-print-hide] {
     display: none !important;
-  }
-
-  body {
-    background: white !important;
-    color: #1E293B !important;
   }
 
   /* Remove page-level max-width and padding so content fills the page */
@@ -60,9 +76,34 @@
     gap: 0.5rem !important;
   }
 
+  /* KPI grid: 4 columns is readable on A4 portrait */
+  .kpi-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  /* Prevent cards and tables from splitting across page breaks */
+  .bg-bn-card,
+  canvas,
+  table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h1, h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
   /* Chart.js canvas: prevent clipping and ensure height is respected */
   canvas {
     max-width: 100% !important;
     height: auto !important;
   }
+
+  /* Heatmap: monochrome-friendly scale so activity gradients show on paper */
+  .react-calendar-heatmap .color-github-0 { fill: #f5f5f5; }
+  .react-calendar-heatmap .color-github-1 { fill: #cfe9d4; }
+  .react-calendar-heatmap .color-github-2 { fill: #88c89b; }
+  .react-calendar-heatmap .color-github-3 { fill: #4d9c69; }
+  .react-calendar-heatmap .color-github-4 { fill: #1f6b3a; }
 }

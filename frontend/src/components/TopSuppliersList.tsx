@@ -1,5 +1,6 @@
 import type { SupplierEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 
 interface TopSuppliersListProps {
   suppliers: SupplierEntry[];
@@ -8,9 +9,12 @@ interface TopSuppliersListProps {
 export function TopSuppliersList({ suppliers }: TopSuppliersListProps) {
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline h-full">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Top Proveedores
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Top Proveedores
+        </h3>
+        <InfoTooltip text="Proveedores a los que más has pagado en el periodo, ordenados por importe total. Solo incluye facturas de gasto." />
+      </div>
       <ol className="space-y-1">
         {suppliers.map((supplier, i) => (
           <li

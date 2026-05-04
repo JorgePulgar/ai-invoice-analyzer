@@ -10,6 +10,7 @@ import {
 import type { TooltipItem } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 import type { MonthlyEntry } from '../types';
+import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
@@ -71,9 +72,12 @@ export function ProfitMarginChart({ data }: ProfitMarginChartProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Margen de beneficio mensual (%)
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Margen de beneficio mensual (%)
+        </h3>
+        <InfoTooltip text="Beneficio de cada mes expresado como porcentaje sobre los ingresos de ese mes. Un margen del 100% significa que no hubo gastos ese mes." />
+      </div>
       <Line data={chartData} options={options} />
     </div>
   );

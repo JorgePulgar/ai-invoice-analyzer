@@ -14,6 +14,7 @@ import type { ChartDataset, TooltipItem } from 'chart.js';
 import { Chart } from 'react-chartjs-2';
 import type { MonthlyEntry } from '../types';
 import { formatCurrency } from '../utils/format';
+import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 
 ChartJS.register(
@@ -114,9 +115,12 @@ export function MonthlyChart({ data, forecast = false }: MonthlyChartProps) {
 
   return (
     <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
-      <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-4">
-        Evolución mensual
-      </h3>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
+          Evolución mensual
+        </h3>
+        <InfoTooltip text="Comparativa mensual de ingresos y gastos durante los últimos 12 meses. La línea de beneficio muestra la diferencia entre ambos." />
+      </div>
       <Chart type="bar" data={chartData} options={options} />
     </div>
   );
