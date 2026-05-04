@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Respect prefers-reduced-motion for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -9,6 +13,15 @@
     transition-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
+}
+
+/* Input focus animations */
+input, textarea, select {
+  @apply transition-all duration-200;
+}
+
+input:focus, textarea:focus, select:focus {
+  @apply ring-2 ring-bn-yellow/30;
 }
 
 /* Light theme (default) */
