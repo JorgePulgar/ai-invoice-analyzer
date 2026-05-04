@@ -1,14 +1,22 @@
 import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface TopClientsListProps {
   clients: ClientEntry[];
 }
 
 export function TopClientsList({ clients }: TopClientsListProps) {
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline h-full">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline h-full ${
+        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Top Clientes

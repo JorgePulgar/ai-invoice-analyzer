@@ -5,6 +5,7 @@ import type { ClientEntry } from '../types';
 import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -23,11 +24,17 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ clients }: RevenueChartProps) {
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
   const cc = useChartColors();
 
   if (clients.length === 0) {
     return (
-      <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px]">
+      <div
+        ref={ref}
+        className={`bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px] ${
+          isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+        }`}
+      >
         <p className="text-bn-muted text-sm">Sin datos de ingresos.</p>
       </div>
     );
@@ -71,7 +78,12 @@ export function RevenueChart({ clients }: RevenueChartProps) {
   };
 
   return (
-    <div className="bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200">
+    <div
+      ref={ref}
+      className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
+        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+      }`}
+    >
       <div className="flex items-center justify-between gap-2 mb-4">
         <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
           Ingresos por cliente

@@ -6,7 +6,10 @@ interface KpiCardProps {
   tone?: 'up' | 'down' | 'neutral';
   trend?: { pct: number };
   info?: string;
+  animate?: string;
+  style?: React.CSSProperties;
 }
+
 
 const toneValueColor: Record<NonNullable<KpiCardProps['tone']>, string> = {
   up:      'text-bn-up',
@@ -23,15 +26,17 @@ const toneAccent: Record<NonNullable<KpiCardProps['tone']>, string> = {
 const trendStyle = (pct: number) =>
   pct >= 0 ? 'bg-bn-up/10 text-bn-up' : 'bg-bn-down/10 text-bn-down';
 
-export function KpiCard({ label, value, tone = 'neutral', trend, info }: KpiCardProps) {
+export function KpiCard({ label, value, tone = 'neutral', trend, info, animate, style }: KpiCardProps) {
   return (
     <div
+      style={style}
       className={`
         relative bg-bn-card rounded-2xl p-4 border border-bn-hairline border-t-2
         ${toneAccent[tone]}
         hover:shadow-xl hover:-translate-y-0.5
         transition-all duration-200
         min-w-0 overflow-hidden flex flex-col gap-2
+        ${animate || ''}
       `}
     >
       <div className="flex items-start justify-between gap-1">

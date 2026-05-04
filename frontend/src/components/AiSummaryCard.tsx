@@ -1,6 +1,7 @@
 import type { AiSummary } from '../types';
 import { formatDate } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface AiSummaryCardProps {
   summary: AiSummary | null;
@@ -8,10 +9,17 @@ interface AiSummaryCardProps {
 }
 
 export function AiSummaryCard({ summary, loading }: AiSummaryCardProps) {
+  const { ref, isVisible } = useScrollReveal({ threshold: 0.1 });
+
   if (!loading && summary === null) return null;
 
   return (
-    <div className="bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6">
+    <div
+      ref={ref}
+      className={`bg-bn-card border-l-4 border-l-bn-yellow border border-bn-hairline rounded-xl px-6 py-4 mb-6 ${
+        isVisible ? 'animate-fadeSlideUp' : 'opacity-0'
+      }`}
+    >
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <p className="text-xs font-semibold text-bn-muted uppercase tracking-wide">
