@@ -9,7 +9,7 @@ interface FacturasTableProps {
 
 export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
   const handleDelete = (id: number, numero: string) => {
-    if (window.confirm(`Delete invoice ${numero}?`)) {
+    if (window.confirm(`¿Eliminar factura ${numero}?`)) {
       onDelete(id);
     }
   };
@@ -17,18 +17,18 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
   return (
     <div className="bg-bn-card rounded-xl border border-bn-hairline overflow-hidden">
       <div className="px-6 py-4 border-b border-bn-hairline">
-        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">Invoices</h3>
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide">Facturas</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-bn-elevated">
             <tr className="text-xs text-bn-muted uppercase">
-              <th className="text-left px-6 py-3 font-medium">Number</th>
-              <th className="text-left px-6 py-3 font-medium">Date</th>
-              <th className="text-left px-6 py-3 font-medium">Issuer</th>
-              <th className="text-left px-6 py-3 font-medium">Recipient</th>
+              <th className="text-left px-6 py-3 font-medium">Número</th>
+              <th className="text-left px-6 py-3 font-medium">Fecha</th>
+              <th className="text-left px-6 py-3 font-medium">Emisor</th>
+              <th className="text-left px-6 py-3 font-medium">Receptor</th>
               <th className="text-right px-6 py-3 font-medium">Total</th>
-              <th className="text-left px-6 py-3 font-medium">Type</th>
+              <th className="text-left px-6 py-3 font-medium">Tipo</th>
               <th className="px-6 py-3" />
             </tr>
           </thead>

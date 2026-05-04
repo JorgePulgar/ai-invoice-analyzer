@@ -86,7 +86,7 @@ export function DashboardPage() {
       const result = await api.listFacturas();
       setFacturasOriginal(result.facturas);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error deleting invoice');
+      setError(err instanceof Error ? err.message : 'Error al eliminar la factura');
     }
   };
 
@@ -207,7 +207,7 @@ export function DashboardPage() {
 
       {filteredFacturas.length === 0 && filtersActive ? (
         <div className="bg-bn-card rounded-xl border border-bn-hairline px-6 py-16 text-center mb-6">
-          <p className="text-bn-muted">No invoices match the selected filters.</p>
+          <p className="text-bn-muted">Sin resultados para los filtros seleccionados.</p>
         </div>
       ) : (
         <>
