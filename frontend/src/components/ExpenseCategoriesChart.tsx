@@ -83,9 +83,7 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
           boxWidth: 12,
           padding: 12,
           formatter: (item: any) => {
-            const datasetIndex = item.datasetIndex;
-            const dataset = chartData.datasets[datasetIndex];
-            const value = dataset.data[item.index];
+            const value = chartData.datasets[0].data[item.index];
             return `${item.text}: ${formatCurrency(value as number)}`;
           },
         },
