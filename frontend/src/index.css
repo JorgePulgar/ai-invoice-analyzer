@@ -4,6 +4,7 @@
 
 html {
   scroll-behavior: smooth;
+  transition: background-color 0.2s, color 0.2s;
 }
 
 /* Respect prefers-reduced-motion for accessibility */

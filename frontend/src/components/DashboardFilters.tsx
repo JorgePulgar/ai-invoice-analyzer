@@ -7,6 +7,7 @@ import {
   isDefaultFilters,
   parseFilters,
 } from '../utils/filters';
+import { ActiveFiltersBar } from './ActiveFiltersBar';
 
 interface Preset {
   label: string;
@@ -105,7 +106,8 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
           <button
             key={preset.label}
             onClick={() => applyPreset(preset)}
-            className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors ${
+            aria-pressed={isActivePreset(preset)}
+            className={`text-xs font-medium px-3 py-1 rounded-full border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bn-yellow/40 ${
               isActivePreset(preset)
                 ? 'bg-bn-yellow text-black border-bn-yellow'
                 : 'border-bn-hairline text-bn-muted hover:border-bn-yellow hover:text-bn-yellow'
@@ -165,12 +167,14 @@ export function DashboardFilters({ facturas }: DashboardFiltersProps) {
       {hasFilters && (
         <button
           onClick={() => setSearchParams({}, { replace: true })}
-          className="text-xs font-medium text-bn-yellow hover:text-bn-yellow-hover transition-colors ml-auto"
+          className="text-xs font-medium text-bn-yellow hover:text-bn-yellow-hover transition-colors ml-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bn-yellow/40 rounded"
         >
-          Limpiar filtros
+          Limpiar todos
         </button>
       )}
       </div>
+
+      <ActiveFiltersBar state={state} />
     </div>
   );
 }

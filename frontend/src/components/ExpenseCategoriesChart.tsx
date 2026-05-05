@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { EmptyState } from './EmptyState';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -50,11 +51,10 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
     return (
       <div
         ref={ref}
-        className={`bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px] ${
-          revealClass
-        }`}
+        className={`bg-bn-card rounded-xl p-6 border border-bn-hairline ${revealClass}`}
       >
-        <p className="text-bn-muted text-sm">Sin datos de gastos.</p>
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-2">Categorías de gasto</h3>
+        <EmptyState icon="📂" title="Sin gastos" description="No hay facturas de gasto en el periodo." compact />
       </div>
     );
   }
