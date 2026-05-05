@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "name": "pptx",
+  "owner": "anthropics",
+  "repo": "skills",
+  "path": "skills/pptx",
+  "branch": "main",
+  "sha": "10b3d70962e489867ddfee7da92f7da6b0eccc4f",
+  "source": "manual"
+}

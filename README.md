@@ -1,87 +1,123 @@
 # Invoice Insights
 
-Financial-analysis SaaS for Spanish freelancers and SMBs. Users upload invoice PDFs; the app extracts data with GPT-4o (Azure AI Foundry, EU region) and shows a dashboard with KPIs, monthly evolution, top clients, and quarterly VAT breakdown.
+Aplicación **SaaS full‑stack** para autónomos y pymes en España que **extrae datos fiscales desde facturas PDF** usando **IA generativa** (Azure AI Foundry con GPT‑4o) y muestra un **dashboard financiero** con KPIs, evolución mensual, top clientes/proveedores e IVA trimestral.
 
-> **Status: in active development.** This is a placeholder README for the build phase. The authoritative working documents are `CLAUDE.md` (rules for Claude Code), `docs/api-contract.md` (endpoint shapes), and the per-side `TASKS.md` files.
+## ¿Qué problema resuelve?
 
-## How we are building this, and why
+Gestionar facturas y preparar métricas fiscales suele ser lento y propenso a errores (copiar/importar datos, cuadrar IVA/IRPF, analizar ingresos vs. gastos). Invoice Insights automatiza la **captura estructurada** desde PDFs y convierte esos datos en **indicadores accionables**.
 
-Two developers, two parallel tracks:
+## Propuesta de valor (enfoque SaaS)
 
-- **Backend** (Node/Express + SQLite + Azure AI Foundry) on branch `dev-backend`.
-- **Frontend** (React + TypeScript via Vite, with Tailwind) on branch `dev-frontend`.
+- **Ahorro de tiempo**: menos trabajo manual al registrar facturas.
+- **Control financiero**: KPIs y tendencias (ingresos, gastos, beneficio, ticket medio, etc.).
+- **Visibilidad fiscal**: IVA e IRPF calculados a partir de los campos extraídos.
+- **Experiencia producto**: flujo de usuario claro (registro → subida → revisión/confirmación → dashboard).
 
-The two tracks meet at one fixed contract: `docs/api-contract.md`. The frontend is built mock-first against `frontend/public/mock/data.json`, which mirrors the real API responses. The consequence:
+## Tecnologías utilizadas (stack)
 
-- The backend can be missing or broken — the frontend keeps working from the mock.
-- The frontend can be missing — the backend has its own smoke scripts.
-- The only coupling between sides is the contract. As long as both sides honour it, neither blocks the other.
+- **Backend**: Node.js (>= 20), Express, SQLite (`better-sqlite3`), JWT (`jsonwebtoken`), hash de contraseñas (`bcrypt`), subida de ficheros (`multer`), parsing de PDFs (`pdfjs-dist`).
+- **Frontend**: React + TypeScript (Vite), Tailwind CSS, React Router, Chart.js (`react-chartjs-2`).
+- **IA generativa**: Azure AI Foundry (GPT‑4o) para **extracción estructurada en JSON** (no chatbot).
 
-We merge to `main` only when a phase is complete. Phase plan:
+## Arquitectura técnica
 
-- **Phase 1 — MVP.** Auth, upload + extraction (with mandatory immediate PDF deletion for GDPR), analytics endpoints, dashboard, drag-and-drop upload.
-- **Phase 2 — Nice-to-have.** AI summary per upload, manual validation step before persisting, dashboard filters, expense-flow improvements.
-- **Phase 3 — Stretch.** Alerts, PDF export of the dashboard, landing page.
+```mermaid
+flowchart LR
+  Usuario[Usuario_Web] -->|Sube_PDF| Frontend[Frontend_React_Vite]
+  Frontend -->|HTTP_JSON_JWT| Backend[Backend_Express_API]
+  Backend -->|Lee_escribe| SQLite[(SQLite)]
+  Backend -->|Extrae_texto_PDF| PdfParse[pdfjs_dist]
+  PdfParse -->|Texto_factura| Backend
+  Backend -->|Una_llamada_chat_completions_JSON| Azure[Azure_AI_Foundry_GPT_4o]
+  Azure -->|JSON_campos_fiscales| Backend
+  Backend -->|Respuestas_contrato| Frontend
+```
 
-Both developers use Claude Code; per-side conventions live in `backend/CLAUDE.md` and `frontend/CLAUDE.md`, and cross-cutting rules live in the root `CLAUDE.md`. Each side has its own `TASKS.md` with the phase work queue.
+- **Contrato API**: el “acoplamiento” entre frontend y backend vive en [`docs/api-contract.md`](docs/api-contract.md) (shape de endpoints + convenciones).
+- **Modo mock en frontend**: el frontend puede leer datos de `frontend/public/mock/data.json` (útil para desarrollar sin backend), configurado en `frontend/src/services/api.ts`.
+- **Privacidad / GDPR**: el PDF subido se usa solo para extracción y se elimina del disco en el flujo de upload (invariante del proyecto; ver contrato).
 
-## Stack
+## Integración de IA (IA generativa con valor real, sin agentes)
 
-- **Backend:** Node.js ≥ 20, Express, `better-sqlite3` (no ORM), `bcrypt`, `jsonwebtoken`, `multer`.
-- **Frontend:** React 18 + TypeScript (strict) on Vite 6, Tailwind CSS 3 for styling, React Router 6 for navigation, Chart.js 4 via `react-chartjs-2`. No state-management library — `useState` + a single `AuthContext`.
-- **AI:** GPT-4o on Azure AI Foundry (EU region, GDPR-compliant).
-- **Storage:** SQLite. Uploaded PDFs are deleted immediately after extraction; nothing personal is persisted on disk.
+Este proyecto incorpora IA generativa como **pipeline de extracción**:
 
-## Quick start
+1. El usuario sube una factura en PDF.
+2. El backend extrae el **texto** del PDF (incluyendo PDFs multi‑página) usando `pdfjs-dist`.
+3. Se hace **una única invocación** a Azure AI Foundry (GPT‑4o) solicitando **solo un JSON** con campos fiscales (por ejemplo `numero`, `fecha`, `base_imponible`, `iva_cantidad`, `irpf_cantidad`, `total`, `tipo`, etc.).
+4. El backend valida el JSON (formato de fecha, moneda ISO, coherencia de totales, etc.) y persiste los datos en SQLite.
+5. El frontend consume los endpoints de analítica y renderiza el dashboard.
 
-### Backend
+**Restricción del profesor (cumplida):** no se usan **sistemas multi‑agente** ni “agentes” de IA. La aplicación se basa en procesos de IA generativa (extracción estructurada) y lógica determinista en backend.
+
+## Funcionalidades principales
+
+- **Autenticación**: registro/login y sesión mediante JWT.
+- **Subida de facturas PDF**: validación de tipo/tamaño, extracción y persistencia.
+- **Revisión/confirmación (drafts)**: el contrato contempla un flujo de borrador (`facturas_draft`) antes de confirmar la factura final.
+- **Dashboard**: KPIs, evolución mensual, top clientes/proveedores, IVA trimestral.
+- **Gestión**: listado y eliminación de facturas del usuario.
+
+## Tutorial de despliegue local
+
+### Requisitos previos
+
+- Node.js **>= 20**
+- (Recomendado) Git y un terminal (PowerShell, bash, etc.)
+
+### 1) Backend (API)
 
 ```bash
 cd backend
-cp .env.example .env       # fill JWT_SECRET and Azure credentials
+cp .env.example .env
 npm install
-npm run init-db            # apply schema, creates ./data/invoice-insights.db
-npm run dev                # nodemon on http://localhost:3000
+npm run init-db
+npm run dev
 ```
 
-Generate a strong JWT secret:
+- **API**: `http://localhost:3000`
+- Configura en tu `.env` (ver plantilla en [`backend/.env.example`](backend/.env.example)):
+  - `JWT_SECRET` (obligatorio)
+  - `AZURE_AI_ENDPOINT`, `AZURE_AI_API_KEY`, `AZURE_AI_DEPLOYMENT` (obligatorio para la extracción con IA)
+  - `CORS_ORIGIN` (para desarrollo: `http://localhost:5173`)
+
+Generar un `JWT_SECRET` fuerte:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
 ```
 
-### Frontend
+### 2) Frontend (UI)
 
 ```bash
 cd frontend
 npm install
-npm run dev                # Vite at http://localhost:5173 (auto-opens)
+npm run dev
 ```
 
-By default `src/services/api.ts` runs with `USE_MOCK = true` and reads `/mock/data.json` (served by Vite from `public/`). Flip to `false` once the backend is running.
+- **Web**: `http://localhost:5173`
+- El frontend llama por defecto a la API en `http://localhost:3000/api` (ver `frontend/src/services/api.ts`).
+- Si quieres usar datos mock (sin backend), ajusta la constante `USE_MOCK` en `frontend/src/services/api.ts` (sirve `/mock/data.json` desde `frontend/public/`).
 
-## Project structure (current)
+### 3) URLs útiles
+
+- Health check: `GET http://localhost:3000/api/health`
+- Autenticación: `POST http://localhost:3000/api/auth/register`, `POST http://localhost:3000/api/auth/login`
+- Subida de PDF: `POST http://localhost:3000/api/facturas/upload`
+
+## Estructura del repositorio
 
 ```
 ai-invoice-analyzer/
-├── CLAUDE.md                ← cross-cutting rules for Claude Code
-├── docs/
-│   └── api-contract.md      ← immutable shape contract (boundary between sides)
-├── backend/
-│   ├── CLAUDE.md            ← backend conventions (raw SQL, response helpers, Azure)
-│   ├── TASKS.md             ← phase tasks for backend
-│   ├── src/                 ← Express app (routes, services, middleware, db, utils)
-│   ├── uploads/             ← temporary; PDFs deleted immediately after extraction
-│   └── .env.example
-└── frontend/
-    ├── CLAUDE.md            ← frontend conventions (React, TS, Tailwind, api service)
-    ├── TASKS.md             ← phase tasks for frontend
-    ├── package.json + vite.config.ts + tsconfig.* + tailwind.config.js
-    ├── index.html           ← Vite entry
-    ├── public/mock/data.json ← realistic mock responses for every endpoint
-    └── src/                 ← App, pages, components, context, services, types
+├── docs/                     # contrato API (boundary) y documentación
+├── backend/                   # Express + SQLite + extracción IA
+└── frontend/                  # React + Vite + Tailwind (dashboard)
 ```
 
-## Language
+## Autores
 
-All documentation, code identifiers, comments, and commit messages are in English. The data contract uses Spanish fiscal vocabulary (`numero`, `fecha`, `base_imponible`, `iva_*`, `irpf_*`, `tipo`, etc.) because those map directly to Spanish tax forms — do not anglicise them. UI labels shown to end users are also in Spanish; the product targets Spain.
+- Jaime Novillo Benito
+- Jorge Pulgar Pacho
+
+## Nota sobre el idioma y los campos fiscales
+
+- Los **nombres de campos del contrato** están en español por vocabulario fiscal (`numero`, `fecha`, `base_imponible`, `iva_*`, `irpf_*`, `tipo`, etc.) y **no deben traducirse** (están alineados con formularios/terminología en España).
