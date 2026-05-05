@@ -7,6 +7,7 @@ export interface FilterState {
   periodo: PeriodoOption;
   tipo: TipoOption;
   cliente: string | null;
+  proveedor: string | null;
   desde: string | null;
   hasta: string | null;
 }
@@ -15,6 +16,7 @@ export const DEFAULT_FILTERS: FilterState = {
   periodo: 'todos',
   tipo: 'todos',
   cliente: null,
+  proveedor: null,
   desde: null,
   hasta: null,
 };
@@ -25,6 +27,7 @@ export function parseFilters(params: URLSearchParams): FilterState {
   const periodo = params.get('periodo') as PeriodoOption | null;
   const tipo = params.get('tipo') as TipoOption | null;
   const cliente = params.get('cliente');
+  const proveedor = params.get('proveedor');
   const desde = params.get('desde');
   const hasta = params.get('hasta');
 
@@ -35,6 +38,7 @@ export function parseFilters(params: URLSearchParams): FilterState {
     periodo: validPeriodo.includes(periodo as PeriodoOption) ? (periodo as PeriodoOption) : 'todos',
     tipo: validTipo.includes(tipo as TipoOption) ? (tipo as TipoOption) : 'todos',
     cliente: cliente || null,
+    proveedor: proveedor || null,
     desde: desde && ISO_DATE_RE.test(desde) ? desde : null,
     hasta: hasta && ISO_DATE_RE.test(hasta) ? hasta : null,
   };
@@ -45,6 +49,7 @@ export function isDefaultFilters(state: FilterState): boolean {
     state.periodo === 'todos' &&
     state.tipo === 'todos' &&
     state.cliente === null &&
+    state.proveedor === null &&
     state.desde === null &&
     state.hasta === null
   );
@@ -112,6 +117,10 @@ export function applyFilters(facturas: Factura[], state: FilterState, today = ne
 
   if (state.cliente) {
     result = result.filter((f) => f.receptor === state.cliente);
+  }
+
+  if (state.proveedor) {
+    result = result.filter((f) => f.emisor === state.proveedor);
   }
 
   return result;

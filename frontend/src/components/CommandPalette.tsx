@@ -2,7 +2,8 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toggleTheme } from '../utils/theme';
-import type { Factura } from '../types';
+import type { ClientEntry, Factura, SupplierEntry } from '../types';
+import { formatCurrency } from '../utils/format';
 
 interface Command {
   id: string;
@@ -13,11 +14,34 @@ interface Command {
 
 interface CommandPaletteProps {
   facturas: Factura[];
+  clients: ClientEntry[];
+  suppliers: SupplierEntry[];
   onClose: () => void;
   onThemeChange?: () => void;
+  onSelectFactura?: (factura: Factura) => void;
 }
 
-export function CommandPalette({ facturas, onClose, onThemeChange }: CommandPaletteProps) {
+const SECTIONS = [
+  { id: 'section-kpis', label: 'Sección: KPIs' },
+  { id: 'section-monthly', label: 'Sección: Evolución mensual' },
+  { id: 'section-top', label: 'Sección: Top clientes y proveedores' },
+  { id: 'section-distribution', label: 'Sección: Distribución de ingresos / gastos' },
+  { id: 'section-vat', label: 'Sección: IVA trimestral' },
+  { id: 'section-vat-table', label: 'Sección: Tabla de IVA' },
+  { id: 'section-cashflow', label: 'Sección: Flujo de caja y margen' },
+  { id: 'section-insights', label: 'Sección: Insights' },
+  { id: 'section-heatmap', label: 'Sección: Mapa de actividad' },
+  { id: 'section-facturas', label: 'Sección: Facturas' },
+];
+
+export function CommandPalette({
+  facturas,
+  clients,
+  suppliers,
+  onClose,
+  onThemeChange,
+  onSelectFactura,
+}: CommandPaletteProps) {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [query, setQuery] = useState('');
@@ -49,12 +73,6 @@ export function CommandPalette({ facturas, onClose, onThemeChange }: CommandPale
       action: () => { navigate('/dashboard', { replace: true }); onClose(); },
     },
     {
-      id: 'export-pdf',
-      label: 'Exportar PDF',
-      description: 'Imprimir / guardar como PDF',
-      action: () => { window.print(); onClose(); },
-    },
-    {
       id: 'theme-toggle',
       label: 'Cambiar tema',
       description: 'Alternar modo oscuro / claro',
@@ -66,6 +84,48 @@ export function CommandPalette({ facturas, onClose, onThemeChange }: CommandPale
       action: () => { logout(); navigate('/login'); onClose(); },
     },
   ], [navigate, logout, onClose, onThemeChange]);
+
+  const sectionCommands: Command[] = useMemo(() => {
+    const behavior: ScrollBehavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth';
+    return SECTIONS.map(({ id, label }) => ({
+      id: `cmd-${id}`,
+      label,
+      action: () => {
+        document.getElementById(id)?.scrollIntoView({ behavior, block: 'start' });
+        onClose();
+      },
+    }));
+  }, [onClose]);
+
+  const clientCommands: Command[] = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return clients
+      .filter((c) => c.cliente.toLowerCase().includes(q))
+      .slice(0, 3)
+      .map((c) => ({
+        id: `client-${c.cliente}`,
+        label: `Cliente: ${c.cliente}`,
+        description: formatCurrency(c.facturado),
+        action: () => { navigate(`/dashboard?cliente=${encodeURIComponent(c.cliente)}`); onClose(); },
+      }));
+  }, [query, clients, navigate, onClose]);
+
+  const supplierCommands: Command[] = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return suppliers
+      .filter((s) => s.proveedor.toLowerCase().includes(q))
+      .slice(0, 3)
+      .map((s) => ({
+        id: `supplier-${s.proveedor}`,
+        label: `Proveedor: ${s.proveedor}`,
+        description: formatCurrency(s.gastado),
+        action: () => { navigate(`/dashboard?proveedor=${encodeURIComponent(s.proveedor)}`); onClose(); },
+      }));
+  }, [query, suppliers, navigate, onClose]);
 
   const facturaCommands: Command[] = useMemo(() => {
     if (!query.trim()) return [];
@@ -82,24 +142,24 @@ export function CommandPalette({ facturas, onClose, onThemeChange }: CommandPale
         id: `factura-${f.id}`,
         label: f.numero,
         description: `${f.emisor} · ${f.tipo}`,
-        action: () => {
-          navigate(`/dashboard?cliente=${encodeURIComponent(f.receptor)}`);
-          onClose();
-        },
+        action: () => { onSelectFactura?.(f); onClose(); },
       }));
-  }, [query, facturas, navigate, onClose]);
+  }, [query, facturas, onClose, onSelectFactura]);
 
   const filtered = useMemo(() => {
     const q = query.toLowerCase();
-    const matching = q
+    const matchingStatic = q
       ? staticCommands.filter(
           (c) =>
             c.label.toLowerCase().includes(q) ||
             (c.description?.toLowerCase().includes(q) ?? false),
         )
       : staticCommands;
-    return [...matching, ...facturaCommands];
-  }, [query, staticCommands, facturaCommands]);
+    const matchingSections = q
+      ? sectionCommands.filter((c) => c.label.toLowerCase().includes(q))
+      : sectionCommands;
+    return [...matchingStatic, ...clientCommands, ...supplierCommands, ...facturaCommands, ...matchingSections];
+  }, [query, staticCommands, sectionCommands, clientCommands, supplierCommands, facturaCommands]);
 
   const safeCursor = Math.min(cursor, Math.max(0, filtered.length - 1));
 
@@ -136,13 +196,16 @@ export function CommandPalette({ facturas, onClose, onThemeChange }: CommandPale
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-bn-hairline">
-          <span className="text-bn-muted text-sm">⌘</span>
+          <div className="flex flex-col gap-0.5 shrink-0">
+            <kbd className="text-[10px] text-bn-muted bg-bn-elevated border border-bn-hairline px-1 py-px rounded leading-none">⌘K</kbd>
+            <kbd className="text-[10px] text-bn-muted bg-bn-elevated border border-bn-hairline px-1 py-px rounded leading-none">Ctrl+K</kbd>
+          </div>
           <input
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Buscar comandos o facturas…"
+            placeholder="Buscar comandos, facturas, secciones…"
             className="flex-1 bg-transparent text-sm text-bn-body placeholder:text-bn-muted focus:outline-none"
           />
           <kbd className="text-xs text-bn-muted bg-bn-elevated border border-bn-hairline px-1.5 py-0.5 rounded">

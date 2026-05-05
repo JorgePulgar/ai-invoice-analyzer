@@ -120,6 +120,17 @@ export function ExpenseCategoriesChart({ facturas }: ExpenseCategoriesChartProps
         <InfoTooltip text="Reparto de tus facturas de gasto por categoría, asignadas automáticamente según el concepto. Agrupa gastos no reconocidos como 'Otros'." />
       </div>
       <Doughnut data={chartData} options={options} />
+      <div className="hidden print:block mt-4 text-xs space-y-1">
+        {sorted.map(([name, val], i) => (
+          <div key={name} className="flex items-center gap-2">
+            <span
+              style={{ background: PALETTE[i % PALETTE.length] }}
+              className="w-3 h-3 rounded-sm shrink-0"
+            />
+            <span>{name}: {formatCurrency(val)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

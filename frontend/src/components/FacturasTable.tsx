@@ -2,28 +2,16 @@ import type { Factura } from '../types';
 import { TipoBadge } from './TipoBadge';
 import { formatCurrency, formatDate } from '../utils/format';
 import { useScrollReveal } from '../hooks/useScrollReveal';
-import { useToast } from '../context/ToastContext';
 import { EmptyState } from './EmptyState';
 import { Link } from 'react-router-dom';
 
 interface FacturasTableProps {
   facturas: Factura[];
-  onDelete: (id: number) => Promise<void>;
+  onSelect?: (factura: Factura) => void;
 }
 
-export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
+export function FacturasTable({ facturas, onSelect }: FacturasTableProps) {
   const { ref, revealClass } = useScrollReveal({ threshold: 0.1 });
-  const { success, error } = useToast();
-
-  const handleDelete = async (id: number, numero: string) => {
-    if (!window.confirm(`¿Eliminar factura ${numero}?`)) return;
-    try {
-      await onDelete(id);
-      success('Factura eliminada');
-    } catch (err) {
-      error(err instanceof Error ? err.message : 'No se pudo eliminar la factura');
-    }
-  };
 
   return (
     <div
@@ -53,7 +41,11 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
           {/* Mobile cards (< md) */}
           <ul className="md:hidden divide-y divide-bn-hairline">
             {facturas.map((f) => (
-              <li key={f.id} className="px-4 py-3 flex items-start justify-between gap-3">
+              <li
+                key={f.id}
+                onClick={() => onSelect?.(f)}
+                className={`px-4 py-3 flex items-start justify-between gap-3 ${onSelect ? 'cursor-pointer hover:bg-bn-elevated transition-colors' : ''}`}
+              >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm font-semibold text-bn-body truncate">{f.numero}</span>
@@ -66,13 +58,6 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
                   <p className={`text-sm font-bold ${f.tipo === 'ingreso' ? 'text-bn-up' : 'text-bn-down'}`}>
                     {formatCurrency(f.total, f.moneda)}
                   </p>
-                  <button
-                    onClick={() => handleDelete(f.id, f.numero)}
-                    aria-label={`Eliminar factura ${f.numero}`}
-                    className="text-xs text-bn-muted hover:text-bn-down transition-colors font-medium mt-1"
-                  >
-                    Eliminar
-                  </button>
                 </div>
               </li>
             ))}
@@ -89,16 +74,16 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
                   <th className="text-left px-6 py-3 font-medium">Receptor</th>
                   <th className="text-right px-6 py-3 font-medium">Total</th>
                   <th className="text-left px-6 py-3 font-medium">Tipo</th>
-                  <th className="px-6 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-bn-hairline">
                 {facturas.map((f) => (
                   <tr
                     key={f.id}
-                    className={`hover:bg-bn-elevated transition-colors border-l-2 ${
+                    onClick={() => onSelect?.(f)}
+                    className={`transition-colors border-l-2 ${
                       f.tipo === 'ingreso' ? 'border-l-bn-up/40' : 'border-l-bn-down/40'
-                    }`}
+                    } ${onSelect ? 'cursor-pointer hover:bg-bn-elevated' : 'hover:bg-bn-elevated'}`}
                   >
                     <td className="px-6 py-3 font-medium text-bn-body">{f.numero}</td>
                     <td className="px-6 py-3 text-bn-muted-strong">{formatDate(f.fecha)}</td>
@@ -111,15 +96,6 @@ export function FacturasTable({ facturas, onDelete }: FacturasTableProps) {
                     </td>
                     <td className="px-6 py-3">
                       <TipoBadge tipo={f.tipo} />
-                    </td>
-                    <td className="px-6 py-3 text-right">
-                      <button
-                        onClick={() => handleDelete(f.id, f.numero)}
-                        aria-label={`Eliminar factura ${f.numero}`}
-                        className="text-xs text-bn-muted hover:text-bn-down transition-colors font-medium"
-                      >
-                        Eliminar
-                      </button>
                     </td>
                   </tr>
                 ))}

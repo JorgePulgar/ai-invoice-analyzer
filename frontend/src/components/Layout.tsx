@@ -6,14 +6,17 @@ import { toggleTheme, getInitialTheme } from '../utils/theme';
 import { CommandPalette } from './CommandPalette';
 import { ShortcutHelp } from './ShortcutHelp';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
-import type { Factura } from '../types';
+import type { ClientEntry, Factura, SupplierEntry } from '../types';
 
 interface LayoutProps {
   children: ReactNode;
   facturas?: Factura[];
+  clients?: ClientEntry[];
+  suppliers?: SupplierEntry[];
+  onSelectFactura?: (factura: Factura) => void;
 }
 
-export function Layout({ children, facturas = [] }: LayoutProps) {
+export function Layout({ children, facturas = [], clients = [], suppliers = [], onSelectFactura }: LayoutProps) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [theme, setTheme] = useState(getInitialTheme);
@@ -73,7 +76,7 @@ export function Layout({ children, facturas = [] }: LayoutProps) {
             </Link>
             <button
               onClick={() => setPaletteOpen(true)}
-              title="Paleta de comandos (⌘K)"
+              title="Paleta de comandos (⌘K / Ctrl+K)"
               aria-label="Abrir paleta de comandos"
               className="text-xs text-bn-muted hover:text-bn-yellow transition-colors border border-bn-hairline rounded px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bn-yellow/40"
             >
@@ -175,8 +178,11 @@ export function Layout({ children, facturas = [] }: LayoutProps) {
       {paletteOpen && (
         <CommandPalette
           facturas={facturas}
+          clients={clients}
+          suppliers={suppliers}
           onClose={() => setPaletteOpen(false)}
           onThemeChange={() => setTheme(getInitialTheme())}
+          onSelectFactura={onSelectFactura}
         />
       )}
 

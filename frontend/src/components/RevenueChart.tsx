@@ -88,6 +88,17 @@ export function RevenueChart({ clients }: RevenueChartProps) {
         <InfoTooltip text="Reparto porcentual de tus ingresos totales entre clientes. Permite identificar dependencias de un solo cliente." />
       </div>
       <Doughnut data={chartData} options={options} />
+      <div className="hidden print:block mt-4 text-xs space-y-1">
+        {clients.map((c, i) => (
+          <div key={c.cliente} className="flex items-center gap-2">
+            <span
+              style={{ background: PALETTE[i % PALETTE.length] }}
+              className="w-3 h-3 rounded-sm shrink-0"
+            />
+            <span>{c.cliente}: {formatCurrency(c.facturado)}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
