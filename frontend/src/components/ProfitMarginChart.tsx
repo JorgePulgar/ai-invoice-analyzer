@@ -13,6 +13,7 @@ import type { MonthlyEntry } from '../types';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { EmptyState } from './EmptyState';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Legend);
 
@@ -85,7 +86,11 @@ export function ProfitMarginChart({ data }: ProfitMarginChartProps) {
         </h3>
         <InfoTooltip text="Beneficio de cada mes expresado como porcentaje sobre los ingresos de ese mes. Un margen del 100% significa que no hubo gastos ese mes." />
       </div>
-      <Line data={chartData} options={options} />
+      {data.length === 0 ? (
+        <EmptyState icon="📈" title="Sin datos" description="No hay datos de ingresos en este periodo." compact />
+      ) : (
+        <Line data={chartData} options={options} />
+      )}
     </div>
   );
 }

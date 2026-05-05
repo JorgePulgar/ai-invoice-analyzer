@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { MonthlyChart } from '../components/MonthlyChart';
@@ -19,6 +19,8 @@ import { FacturasTable } from '../components/FacturasTable';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
 import { AlertsBanner } from '../components/AlertsBanner';
+import { SkeletonCard, SkeletonChart, SkeletonList } from '../components/Skeleton';
+import { OnboardingModal, useOnboarding } from '../components/OnboardingModal';
 import { api } from '../services/api';
 import { formatCurrency, formatDate } from '../utils/format';
 import {
@@ -44,6 +46,7 @@ function calcTrend(monthly: MonthlyEntry[], key: 'ingresos' | 'gastos'): number 
 export function DashboardPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { show: showOnboarding, dismiss: dismissOnboarding } = useOnboarding();
 
   // Server-provided data (unfiltered)
   const [serverSummary, setServerSummary] = useState<Summary | null>(null);
@@ -57,7 +60,9 @@ export function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
+    setLoading(true);
+    setError(null);
     Promise.all([
       api.getSummary(),
       api.getMonthly(),
@@ -81,6 +86,10 @@ export function DashboardPage() {
       })
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   // Filters are URL-driven. Derived analytics are memoised against the serialised
   // search-params string so any URL change reliably triggers a recompute.
@@ -116,20 +125,25 @@ export function DashboardPage() {
   );
 
   const handleDelete = async (id: number) => {
-    try {
-      await api.deleteFactura(id);
-      const result = await api.listFacturas();
-      setFacturasOriginal(result.facturas);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Error al eliminar la factura');
-    }
+    await api.deleteFactura(id);
+    const result = await api.listFacturas();
+    setFacturasOriginal(result.facturas);
   };
 
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-bn-muted">Cargando…</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6">
+          {Array.from({ length: 7 }).map((_, i) => <SkeletonCard key={i} />)}
+        </div>
+        <SkeletonChart height={300} />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <SkeletonList />
+          <SkeletonList />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <SkeletonChart />
+          <SkeletonChart />
         </div>
       </Layout>
     );
@@ -138,7 +152,38 @@ export function DashboardPage() {
   if (error) {
     return (
       <Layout>
-        <p className="text-bn-down mt-4">{error}</p>
+        <div className="bg-bn-card rounded-xl border border-bn-hairline p-8 mt-6 flex flex-col items-center gap-4 text-center">
+          <span className="text-4xl opacity-40">⚠</span>
+          <p className="text-bn-body font-semibold">Error al cargar los datos</p>
+          <p className="text-bn-muted text-sm max-w-sm">{error}</p>
+          <button
+            onClick={loadData}
+            className="mt-2 text-sm font-semibold bg-bn-yellow text-bn-ink px-5 py-2 rounded-lg hover:bg-bn-yellow-hover transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Zero invoices — show onboarding CTA
+  if (facturasOriginal.length === 0) {
+    return (
+      <Layout>
+        <div className="mt-16 flex flex-col items-center gap-6 text-center animate-fadeSlideUp">
+          <span className="text-6xl">📄</span>
+          <h2 className="text-2xl font-bold text-bn-body">Bienvenido a Invoice Insights</h2>
+          <p className="text-bn-muted text-sm max-w-md">
+            Sube tu primera factura para empezar a visualizar tus ingresos, gastos, IVA y mucho más.
+          </p>
+          <Link
+            to="/upload"
+            className="bg-bn-yellow text-bn-ink font-semibold px-6 py-3 rounded-xl hover:bg-bn-yellow-hover transition-colors"
+          >
+            Subir mi primera factura
+          </Link>
+        </div>
       </Layout>
     );
   }
@@ -147,6 +192,10 @@ export function DashboardPage() {
   const gastosTrend = calcTrend(monthly, 'gastos');
   const insights = summary ? deriveInsights(summary, monthly, clients, suppliers) : [];
 
+  const ingresosSeries = monthly.map((m) => m.ingresos);
+  const gastosSeries = monthly.map((m) => m.gastos);
+  const beneficioSeries = monthly.map((m) => m.ingresos - m.gastos);
+
   const kpis = summary
     ? [
         {
@@ -154,6 +203,7 @@ export function DashboardPage() {
           value: formatCurrency(summary.ingresos_totales),
           tone: 'up' as const,
           trend: ingresosTrend !== null ? { pct: ingresosTrend } : undefined,
+          series: ingresosSeries,
           info: 'Suma de los importes totales de todas las facturas emitidas (ingresos) en el periodo seleccionado.',
         },
         {
@@ -161,12 +211,14 @@ export function DashboardPage() {
           value: formatCurrency(summary.gastos_totales),
           tone: 'down' as const,
           trend: gastosTrend !== null ? { pct: gastosTrend } : undefined,
+          series: gastosSeries,
           info: 'Suma de los importes totales de todas las facturas recibidas (gastos) en el periodo seleccionado.',
         },
         {
           label: 'Beneficio neto',
           value: formatCurrency(summary.beneficio_neto),
           tone: (summary.beneficio_neto >= 0 ? 'up' : 'down') as 'up' | 'down',
+          series: beneficioSeries,
           info: 'Ingresos totales menos gastos totales. Refleja el beneficio antes de impuestos del periodo.',
         },
         {
@@ -197,7 +249,7 @@ export function DashboardPage() {
     : [];
 
   return (
-    <Layout>
+    <Layout facturas={facturasOriginal}>
       {/* Print-only header — hidden on screen via Tailwind's hidden class */}
       {summary && (
         <div className="hidden print:block mb-6 pb-4 border-b border-bn-hairline">
@@ -237,6 +289,7 @@ export function DashboardPage() {
             value={kpi.value}
             tone={kpi.tone}
             trend={kpi.trend}
+            series={kpi.series}
             info={kpi.info}
             style={{ animationDelay: `${i * 75}ms` }}
           />
@@ -302,6 +355,8 @@ export function DashboardPage() {
       <div data-print-hide>
         <FacturasTable facturas={filteredFacturas} onDelete={handleDelete} />
       </div>
+
+      {showOnboarding && <OnboardingModal onClose={dismissOnboarding} />}
     </Layout>
   );
 }

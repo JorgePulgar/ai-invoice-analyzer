@@ -28,7 +28,7 @@ const FEATURES = [
 export function LandingPage() {
   const { isAuthed } = useAuth();
   const [searchParams] = useSearchParams();
-  const { ref: featuresRef, revealClass: featuresRevealClass } = useScrollReveal({ threshold: 0.1 });
+  const { ref: featuresRef, isVisible: featuresVisible, revealClass: featuresRevealClass } = useScrollReveal({ threshold: 0.1 });
   const isDemo = searchParams.get('demo') === '1';
 
   if (isAuthed) return <Navigate to="/dashboard" replace />;

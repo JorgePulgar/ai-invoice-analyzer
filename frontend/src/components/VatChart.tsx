@@ -13,6 +13,7 @@ import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { EmptyState } from './EmptyState';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
@@ -86,9 +87,13 @@ export function VatChart({ vat }: VatChartProps) {
     },
   };
 
+  const ariaLabel = `Gráfico de barras: IVA trimestral. ${vat.map((v) => `${v.trimestre} ${v.anio}: repercutido ${v.iva_repercutido}, a pagar ${v.iva_a_pagar}`).join('. ')}`;
+
   return (
     <div
       ref={ref}
+      role="img"
+      aria-label={ariaLabel}
       className={`bg-bn-card rounded-xl p-6 border border-bn-hairline hover:shadow-lg transition-shadow duration-200 ${
         revealClass
       }`}
@@ -99,7 +104,11 @@ export function VatChart({ vat }: VatChartProps) {
         </h3>
         <InfoTooltip text="IVA repercutido (cobrado a clientes), soportado (pagado a proveedores) y diferencia a pagar a Hacienda, desglosados por trimestre del año en curso." />
       </div>
-      <Bar data={chartData} options={options} />
+      {vat.length === 0 ? (
+        <EmptyState icon="🧾" title="Sin datos de IVA" description="No hay trimestres con datos aún." compact />
+      ) : (
+        <Bar data={chartData} options={options} />
+      )}
     </div>
   );
 }

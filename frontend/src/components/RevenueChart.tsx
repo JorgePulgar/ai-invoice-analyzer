@@ -6,6 +6,7 @@ import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { EmptyState } from './EmptyState';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -29,13 +30,9 @@ export function RevenueChart({ clients }: RevenueChartProps) {
 
   if (clients.length === 0) {
     return (
-      <div
-        ref={ref}
-        className={`bg-bn-card rounded-xl p-6 border border-bn-hairline flex items-center justify-center min-h-[200px] ${
-          revealClass
-        }`}
-      >
-        <p className="text-bn-muted text-sm">Sin datos de ingresos.</p>
+      <div ref={ref} className={`bg-bn-card rounded-xl p-6 border border-bn-hairline ${revealClass}`}>
+        <h3 className="text-xs font-semibold text-bn-muted uppercase tracking-wide mb-2">Ingresos por cliente</h3>
+        <EmptyState icon="🥧" title="Sin ingresos" description="No hay facturas de ingreso en el periodo." compact />
       </div>
     );
   }

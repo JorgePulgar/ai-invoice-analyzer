@@ -15,6 +15,7 @@ import { formatCurrency } from '../utils/format';
 import { InfoTooltip } from './InfoTooltip';
 import { useChartColors } from '../utils/useChartColors';
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { EmptyState } from './EmptyState';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
@@ -91,7 +92,11 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
         </h3>
         <InfoTooltip text="Diferencia neta entre ingresos y gastos mes a mes. Valores positivos indican meses con superávit; negativos, meses con déficit de tesorería." />
       </div>
-      <Line data={chartData} options={options} />
+      {data.length === 0 ? (
+        <EmptyState icon="💸" title="Sin datos" description="No hay movimientos en este periodo." compact />
+      ) : (
+        <Line data={chartData} options={options} />
+      )}
     </div>
   );
 }

@@ -1,11 +1,14 @@
 import { useScrollReveal } from '../hooks/useScrollReveal';
+import { useCountUp } from '../hooks/useCountUp';
 import { InfoTooltip } from './InfoTooltip';
+import { Sparkline } from './Sparkline';
 
 interface KpiCardProps {
   label: string;
   value: string;
   tone?: 'up' | 'down' | 'neutral';
   trend?: { pct: number };
+  series?: number[];
   info?: string;
   style?: React.CSSProperties;
 }
@@ -25,8 +28,35 @@ const toneAccent: Record<NonNullable<KpiCardProps['tone']>, string> = {
 const trendStyle = (pct: number) =>
   pct >= 0 ? 'bg-bn-up/10 text-bn-up' : 'bg-bn-down/10 text-bn-down';
 
-export function KpiCard({ label, value, tone = 'neutral', trend, info, style }: KpiCardProps) {
-  const { ref, revealClass } = useScrollReveal();
+// Extract a leading number from formatted strings like "€1,234.56" or "1234"
+function parseNumeric(value: string): number | null {
+  const cleaned = value.replace(/[^0-9.-]/g, '');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? null : n;
+}
+
+function formatAnimated(value: string, animated: number): string {
+  // Detect currency prefix
+  const currencyMatch = value.match(/^([^0-9-]*)([0-9,. ]+)(.*)$/);
+  if (!currencyMatch) return value;
+  const [, prefix, , suffix] = currencyMatch;
+  const original = parseNumeric(value);
+  if (original === null || original === 0) return value;
+
+  // Re-format with same decimal places as the original
+  const decimals = (value.split('.')[1] ?? '').replace(/[^0-9]/g, '').length;
+  const formatted = animated.toLocaleString('es-ES', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+  return `${prefix}${formatted}${suffix}`;
+}
+
+export function KpiCard({ label, value, tone = 'neutral', trend, series, info, style }: KpiCardProps) {
+  const { ref, isVisible, revealClass } = useScrollReveal();
+  const numericValue = parseNumeric(value) ?? 0;
+  const animated = useCountUp(numericValue, isVisible);
+  const displayValue = isVisible ? formatAnimated(value, animated) : value;
 
   return (
     <div ref={ref} style={style} className={revealClass}>
@@ -47,7 +77,7 @@ export function KpiCard({ label, value, tone = 'neutral', trend, info, style }: 
         </div>
 
         <p className={`text-xl font-extrabold leading-none tracking-tight ${toneValueColor[tone]}`}>
-          {value}
+          {displayValue}
         </p>
 
         {trend !== undefined ? (
@@ -65,6 +95,10 @@ export function KpiCard({ label, value, tone = 'neutral', trend, info, style }: 
           </span>
         ) : (
           <span className="h-4" />
+        )}
+
+        {series && series.length >= 2 && (
+          <Sparkline series={series} tone={tone} />
         )}
       </div>
     </div>
