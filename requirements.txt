@@ -1,0 +1,3 @@
+# Dependencies for manage_services.py (Service Manager GUI)
+psutil>=5.9.0
+
