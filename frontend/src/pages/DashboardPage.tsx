@@ -16,6 +16,7 @@ import { InsightsPanel } from '../components/InsightsPanel';
 import { InvoiceHeatmap } from '../components/InvoiceHeatmap';
 import { deriveInsights } from '../utils/insights';
 import { FacturasTable } from '../components/FacturasTable';
+import { InvoiceDetailModal } from '../components/InvoiceDetailModal';
 import { DashboardFilters } from '../components/DashboardFilters';
 import { AiSummaryCard } from '../components/AiSummaryCard';
 import { AlertsBanner } from '../components/AlertsBanner';
@@ -59,6 +60,7 @@ export function DashboardPage() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedFactura, setSelectedFactura] = useState<Factura | null>(null);
 
   const loadData = useCallback(() => {
     setLoading(true);
@@ -128,6 +130,11 @@ export function DashboardPage() {
     await api.deleteFactura(id);
     const result = await api.listFacturas();
     setFacturasOriginal(result.facturas);
+  };
+
+  const handleModalDelete = async (id: number) => {
+    await handleDelete(id);
+    setSelectedFactura(null);
   };
 
   if (loading) {
@@ -249,7 +256,12 @@ export function DashboardPage() {
     : [];
 
   return (
-    <Layout facturas={facturasOriginal}>
+    <Layout
+      facturas={facturasOriginal}
+      clients={clients}
+      suppliers={suppliers}
+      onSelectFactura={setSelectedFactura}
+    >
       {/* Print-only header — hidden on screen via Tailwind's hidden class */}
       {summary && (
         <div className="hidden print:block mb-6 pb-4 border-b border-bn-hairline">
@@ -281,7 +293,7 @@ export function DashboardPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6 kpi-grid">
+      <div id="section-kpis" className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-7 gap-4 mb-6 kpi-grid">
         {kpis.map((kpi, i) => (
           <KpiCard
             key={kpi.label}
@@ -312,51 +324,64 @@ export function DashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6">
+          <div id="section-monthly" className="mb-6">
             <MonthlyChart data={monthly} forecast={!filtersActive} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div id="section-top" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <TopClientsList clients={clients} />
             <TopSuppliersList suppliers={suppliers} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div id="section-distribution" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <RevenueChart clients={clients} />
             <ExpenseCategoriesChart facturas={filteredFacturas} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div id="section-vat" className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <div className="lg:col-span-2">
               <VatChart vat={vat} />
             </div>
             {summary && <IrpfWidget amount={summary.irpf_retenido} />}
           </div>
 
-          <div className="mb-6">
+          <div id="section-vat-table" className="mb-6">
             <VatTable vat={vat} />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <div id="section-cashflow" className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <CashFlowChart data={monthly} />
             <ProfitMarginChart data={monthly} />
           </div>
 
-          <div data-print-hide>
+          <div id="section-insights" data-print-hide>
             <InsightsPanel insights={insights} />
           </div>
 
-          <div data-print-hide>
+          <div id="section-heatmap" data-print-hide>
             <InvoiceHeatmap facturas={filteredFacturas} />
           </div>
         </>
       )}
 
-      <div data-print-hide>
-        <FacturasTable facturas={filteredFacturas} onDelete={handleDelete} />
+      <div id="section-facturas" data-print-hide>
+        <FacturasTable facturas={filteredFacturas} onSelect={setSelectedFactura} />
       </div>
 
       {showOnboarding && <OnboardingModal onClose={dismissOnboarding} />}
+
+      {selectedFactura && (
+        <InvoiceDetailModal
+          factura={selectedFactura}
+          onClose={() => setSelectedFactura(null)}
+          onSaved={async (updated) => {
+            const result = await api.listFacturas();
+            setFacturasOriginal(result.facturas);
+            setSelectedFactura(updated);
+          }}
+          onDelete={handleModalDelete}
+        />
+      )}
     </Layout>
   );
 }

@@ -207,4 +207,19 @@ export const api = {
     if (USE_MOCK) return;
     await request<{ id: number }>('DELETE', `/facturas/drafts/${id}`);
   },
+
+  async updateFactura(id: number, draft: DraftFactura): Promise<Factura> {
+    if (USE_MOCK) {
+      await new Promise((r) => setTimeout(r, 300));
+      const m = await loadMock();
+      const idx = m.facturas.findIndex((f) => f.id === id);
+      if (idx === -1) throw new Error('Factura no encontrada');
+      const updated: Factura = { ...m.facturas[idx], ...draft, id };
+      m.facturas[idx] = updated;
+      return updated;
+    }
+    // TODO(contract): PUT /api/facturas/:id needs to be added to docs/api-contract.md
+    // and implemented by backend before USE_MOCK=false works here.
+    return request<Factura>('PUT', `/facturas/${id}`, draft);
+  },
 };
