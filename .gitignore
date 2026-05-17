@@ -44,3 +44,7 @@ GUIDE-*.md
 # Presentations (deliverable artefacts; keep out of git history)
 presentacion-ventas.pptx
 ~$presentacion-ventas.pptx
+
+# Claude Code local config and skills (per-developer, not shared)
+.claude/
+
