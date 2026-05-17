@@ -1,68 +1,86 @@
 # Invoice Insights
 
-Aplicación **SaaS full‑stack** para autónomos y pymes en España que **extrae datos fiscales desde facturas PDF** usando **IA generativa** (Azure AI Foundry con GPT‑4o) y muestra un **dashboard financiero** con KPIs, evolución mensual, top clientes/proveedores e IVA trimestral.
+> 🌐 [Versión en español](./README.es.md)
 
-## ¿Qué problema resuelve?
+A **full-stack SaaS** for Spanish freelancers and SMEs that **extracts fiscal data from invoice PDFs** using **generative AI** (Azure AI Foundry with GPT-4o) and surfaces a **financial dashboard** with KPIs, monthly trends, top clients/suppliers, and quarterly VAT reporting.
 
-Gestionar facturas y preparar métricas fiscales suele ser lento y propenso a errores (copiar/importar datos, cuadrar IVA/IRPF, analizar ingresos vs. gastos). Invoice Insights automatiza la **captura estructurada** desde PDFs y convierte esos datos en **indicadores accionables**.
+Built in one week as a two-person team project.
 
-## Propuesta de valor (enfoque SaaS)
+## Screenshots
 
-- **Ahorro de tiempo**: menos trabajo manual al registrar facturas.
-- **Control financiero**: KPIs y tendencias (ingresos, gastos, beneficio, ticket medio, etc.).
-- **Visibilidad fiscal**: IVA e IRPF calculados a partir de los campos extraídos.
-- **Experiencia producto**: flujo de usuario claro (registro → subida → revisión/confirmación → dashboard).
+### Dashboard
 
-## Tecnologías utilizadas (stack)
+![Dashboard overview](./docs/screenshots/dashboard-preview.png)
 
-- **Backend**: Node.js (>= 20), Express, SQLite (`better-sqlite3`), JWT (`jsonwebtoken`), hash de contraseñas (`bcrypt`), subida de ficheros (`multer`), parsing de PDFs (`pdfjs-dist`).
+*KPIs, monthly trends, top clients/suppliers, and quarterly VAT — [view full dashboard](./docs/screenshots/dashboard-full.png)*
+
+### Invoice upload
+
+![Invoice upload flow](./docs/screenshots/upload.png)
+
+*Upload a PDF invoice; the AI extracts structured fiscal data into the dashboard.*
+
+## What problem it solves
+
+Managing invoices and preparing fiscal metrics is typically slow and error-prone — copy/import work, reconciling VAT/IRPF, analyzing income vs. expenses. Invoice Insights automates the **structured capture** from PDFs and turns that data into **actionable indicators**.
+
+## Value proposition (SaaS focus)
+
+- **Time savings** — much less manual work when registering invoices.
+- **Financial control** — KPIs and trends (income, expenses, profit, average ticket size, etc.).
+- **Fiscal visibility** — VAT and IRPF calculated from the extracted fields.
+- **Product experience** — clear user flow (register → upload → review/confirm → dashboard).
+
+## Tech stack
+
+- **Backend**: Node.js (>= 20), Express, SQLite (`better-sqlite3`), JWT (`jsonwebtoken`), password hashing (`bcrypt`), file uploads (`multer`), PDF parsing (`pdfjs-dist`).
 - **Frontend**: React + TypeScript (Vite), Tailwind CSS, React Router, Chart.js (`react-chartjs-2`).
-- **IA generativa**: Azure AI Foundry (GPT‑4o) para **extracción estructurada en JSON** (no chatbot).
+- **Generative AI**: Azure AI Foundry (GPT-4o) for **structured JSON extraction** (not chatbot).
 
-## Arquitectura técnica
+## Architecture
 
 ```mermaid
 flowchart LR
-  Usuario[Usuario_Web] -->|Sube_PDF| Frontend[Frontend_React_Vite]
-  Frontend -->|HTTP_JSON_JWT| Backend[Backend_Express_API]
-  Backend -->|Lee_escribe| SQLite[(SQLite)]
-  Backend -->|Extrae_texto_PDF| PdfParse[pdfjs_dist]
-  PdfParse -->|Texto_factura| Backend
-  Backend -->|Una_llamada_chat_completions_JSON| Azure[Azure_AI_Foundry_GPT_4o]
-  Azure -->|JSON_campos_fiscales| Backend
-  Backend -->|Respuestas_contrato| Frontend
+  User[Web User] -->|Uploads PDF| Frontend[Frontend React + Vite]
+  Frontend -->|HTTP / JSON / JWT| Backend[Backend Express API]
+  Backend -->|Read/Write| SQLite[(SQLite)]
+  Backend -->|PDF text extraction| PdfParse[pdfjs-dist]
+  PdfParse -->|Invoice text| Backend
+  Backend -->|Single chat.completions call, JSON-only| Azure[Azure AI Foundry GPT-4o]
+  Azure -->|JSON fiscal fields| Backend
+  Backend -->|Contract-bound responses| Frontend
 ```
 
-- **Contrato API**: el “acoplamiento” entre frontend y backend vive en [`docs/api-contract.md`](docs/api-contract.md) (shape de endpoints + convenciones).
-- **Modo mock en frontend**: el frontend puede leer datos de `frontend/public/mock/data.json` (útil para desarrollar sin backend), configurado en `frontend/src/services/api.ts`.
-- **Privacidad / GDPR**: el PDF subido se usa solo para extracción y se elimina del disco en el flujo de upload (invariante del proyecto; ver contrato).
+- **API contract** — the boundary between frontend and backend lives in [`docs/api-contract.md`](./docs/api-contract.md) (endpoint shapes + conventions).
+- **Frontend mock mode** — the frontend can read data from `frontend/public/mock/data.json` (useful for developing without the backend), configured in `frontend/src/services/api.ts`.
+- **Privacy / GDPR** — the uploaded PDF is used only for extraction and is deleted from disk during the upload flow (project invariant; see contract).
 
-## Integración de IA (IA generativa con valor real, sin agentes)
+## AI integration — generative AI with real value, no agents
 
-Este proyecto incorpora IA generativa como **pipeline de extracción**:
+We deliberately chose a **single-call extraction pipeline** over a multi-agent architecture. For structured invoice data, one well-prompted call returning validated JSON is more reliable, cheaper, easier to debug, and faster than orchestrating multiple agents — and avoids the failure modes that multi-agent systems introduce when a single deterministic answer is what you actually need.
 
-1. El usuario sube una factura en PDF.
-2. El backend extrae el **texto** del PDF (incluyendo PDFs multi‑página) usando `pdfjs-dist`.
-3. Se hace **una única invocación** a Azure AI Foundry (GPT‑4o) solicitando **solo un JSON** con campos fiscales (por ejemplo `numero`, `fecha`, `base_imponible`, `iva_cantidad`, `irpf_cantidad`, `total`, `tipo`, etc.).
-4. El backend valida el JSON (formato de fecha, moneda ISO, coherencia de totales, etc.) y persiste los datos en SQLite.
-5. El frontend consume los endpoints de analítica y renderiza el dashboard.
+The pipeline:
 
-**Restricción del profesor (cumplida):** no se usan **sistemas multi‑agente** ni “agentes” de IA. La aplicación se basa en procesos de IA generativa (extracción estructurada) y lógica determinista en backend.
+1. The user uploads an invoice in PDF format.
+2. The backend extracts the **text** from the PDF (including multi-page PDFs) using `pdfjs-dist`.
+3. A **single call** is made to Azure AI Foundry (GPT-4o) requesting **only a JSON** with fiscal fields (e.g., `numero`, `fecha`, `base_imponible`, `iva_cantidad`, `irpf_cantidad`, `total`, `tipo`, etc.).
+4. The backend validates the JSON (date format, ISO currency, totals consistency, etc.) and persists the data in SQLite.
+5. The frontend consumes the analytics endpoints and renders the dashboard.
 
-## Funcionalidades principales
+## Key features
 
-- **Autenticación**: registro/login y sesión mediante JWT.
-- **Subida de facturas PDF**: validación de tipo/tamaño, extracción y persistencia.
-- **Revisión/confirmación (drafts)**: el contrato contempla un flujo de borrador (`facturas_draft`) antes de confirmar la factura final.
-- **Dashboard**: KPIs, evolución mensual, top clientes/proveedores, IVA trimestral.
-- **Gestión**: listado y eliminación de facturas del usuario.
+- **Authentication** — registration/login and session via JWT.
+- **PDF invoice upload** — type/size validation, extraction, and persistence.
+- **Review/confirmation (drafts)** — the contract includes a draft flow (`facturas_draft`) before confirming the final invoice.
+- **Dashboard** — KPIs, monthly evolution, top clients/suppliers, quarterly VAT.
+- **Management** — listing and deletion of user invoices.
 
-## Tutorial de despliegue local
+## Local deployment
 
-### Requisitos previos
+### Prerequisites
 
 - Node.js **>= 20**
-- (Recomendado) Git y un terminal (PowerShell, bash, etc.)
+- (Recommended) Git and a terminal (PowerShell, bash, etc.)
 
 ### 1) Backend (API)
 
@@ -75,12 +93,12 @@ npm run dev
 ```
 
 - **API**: `http://localhost:3000`
-- Configura en tu `.env` (ver plantilla en [`backend/.env.example`](backend/.env.example)):
-  - `JWT_SECRET` (obligatorio)
-  - `AZURE_AI_ENDPOINT`, `AZURE_AI_API_KEY`, `AZURE_AI_DEPLOYMENT` (obligatorio para la extracción con IA)
-  - `CORS_ORIGIN` (para desarrollo: `http://localhost:5173`)
+- Configure in your `.env` (see template in [`backend/.env.example`](./backend/.env.example)):
+  - `JWT_SECRET` (required)
+  - `AZURE_AI_ENDPOINT`, `AZURE_AI_API_KEY`, `AZURE_AI_DEPLOYMENT` (required for AI extraction)
+  - `CORS_ORIGIN` (for development: `http://localhost:5173`)
 
-Generar un `JWT_SECRET` fuerte:
+Generate a strong `JWT_SECRET`:
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"
@@ -95,29 +113,29 @@ npm run dev
 ```
 
 - **Web**: `http://localhost:5173`
-- El frontend llama por defecto a la API en `http://localhost:3000/api` (ver `frontend/src/services/api.ts`).
-- Si quieres usar datos mock (sin backend), ajusta la constante `USE_MOCK` en `frontend/src/services/api.ts` (sirve `/mock/data.json` desde `frontend/public/`).
+- The frontend calls the API at `http://localhost:3000/api` by default (see `frontend/src/services/api.ts`).
+- If you want to use mock data (no backend), toggle the `USE_MOCK` constant in `frontend/src/services/api.ts` (serves `/mock/data.json` from `frontend/public/`).
 
-### 3) URLs útiles
+### 3) Useful URLs
 
 - Health check: `GET http://localhost:3000/api/health`
-- Autenticación: `POST http://localhost:3000/api/auth/register`, `POST http://localhost:3000/api/auth/login`
-- Subida de PDF: `POST http://localhost:3000/api/facturas/upload`
+- Authentication: `POST http://localhost:3000/api/auth/register`, `POST http://localhost:3000/api/auth/login`
+- PDF upload: `POST http://localhost:3000/api/facturas/upload`
 
-## Estructura del repositorio
+## Repository structure
 
 ```
 ai-invoice-analyzer/
-├── docs/                     # contrato API (boundary) y documentación
-├── backend/                   # Express + SQLite + extracción IA
-└── frontend/                  # React + Vite + Tailwind (dashboard)
+├── docs/        # API contract (boundary) and documentation
+├── backend/     # Express + SQLite + AI extraction
+└── frontend/    # React + Vite + Tailwind (dashboard)
 ```
 
-## Autores
+## Note on language and fiscal fields
+
+The **API contract field names are in Spanish** for fiscal vocabulary reasons (`numero`, `fecha`, `base_imponible`, `iva_*`, `irpf_*`, `tipo`, etc.) and **should not be translated** — they are aligned with Spanish tax forms and terminology. Translating them would break the mapping to official documents.
+
+## Authors
 
 - Jaime Novillo Benito
 - Jorge Pulgar Pacho
-
-## Nota sobre el idioma y los campos fiscales
-
-- Los **nombres de campos del contrato** están en español por vocabulario fiscal (`numero`, `fecha`, `base_imponible`, `iva_*`, `irpf_*`, `tipo`, etc.) y **no deben traducirse** (están alineados con formularios/terminología en España).
